@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* DESIGN PREMIUM (Igual V18) */
+        /* DESIGN PREMIUM (V19) */
         :root { --primary: #10b981; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -84,9 +84,8 @@
 
     <script>
         // =======================================================
-        // 🟢 CONFIGURAÇÃO DO BANCO DE DADOS (PLANILHA)
+        // 🟢 BANCO DE DADOS (SUA PLANILHA CONECTADA)
         // =======================================================
-        // Cole abaixo o link que você copiou do Google Sheets (Publicar na Web > CSV)
         
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgml7_32q0TOdv8FtFUh-aUFj0WDMD4JiPNziIvpncAE_BHeATOwxsSX6L0iUcak79TdR45sVi8qSz/pub?output=csv';
 
@@ -107,7 +106,6 @@
             const p = document.getElementById('pass').value.trim();
 
             if(!u || !p) { msg.innerText = "Preencha tudo."; return; }
-            if(PLANILHA_URL.includes('COLE_SEU_LINK')) { msg.innerText = "Erro: Configure o link da planilha no código."; return; }
 
             // Efeito visual
             btn.style.display = 'none';
@@ -120,13 +118,14 @@
                     const linhas = data.split('\n');
                     let usuarioEncontrado = null;
 
-                    // Ignora a primeira linha (cabeçalho)
+                    // Ignora a primeira linha (cabeçalho) e busca
                     for (let i = 1; i < linhas.length; i++) {
                         const colunas = linhas[i].split(',');
                         if (colunas.length >= 3) {
-                            const planilhaUser = colunas[0].trim();
-                            const planilhaPass = colunas[1].trim();
-                            const planilhaDate = colunas[2].trim();
+                            // Limpa espaços extras e aspas que o CSV pode trazer
+                            const planilhaUser = colunas[0].replace(/['"]+/g, '').trim();
+                            const planilhaPass = colunas[1].replace(/['"]+/g, '').trim();
+                            const planilhaDate = colunas[2].replace(/['"]+/g, '').trim();
 
                             if (planilhaUser === u && planilhaPass === p) {
                                 usuarioEncontrado = { user: planilhaUser, validade: planilhaDate };
@@ -142,7 +141,8 @@
                     }
                 })
                 .catch(error => {
-                    msg.innerText = error.message.includes("fetch") ? "Erro de conexão." : error.message;
+                    console.error(error);
+                    msg.innerText = "Usuário não encontrado ou erro na conexão.";
                     btn.style.display = 'block';
                     loader.style.display = 'none';
                 });
@@ -150,7 +150,8 @@
 
         function validarAcesso(dados) {
             const hoje = new Date();
-            const validade = new Date(dados.validade);
+            // Garante que a data seja lida corretamente (yyyy-mm-dd)
+            const validade = new Date(dados.validade + 'T00:00:00');
             
             if (dados.user !== 'admin' && hoje > validade) {
                 document.getElementById('msg-login').innerText = "Acesso vencido! Renove via Pix.";
@@ -172,11 +173,12 @@
             document.getElementById('ola-user').innerText = "Olá, " + user;
             
             if (user === 'admin') {
-                document.getElementById('status-acesso').innerText = "Modo Admin (Gestão pela Planilha)";
+                document.getElementById('status-acesso').innerText = "Modo Admin (Gerido pela Planilha)";
                 document.getElementById('vencimento-alert').style.display = 'none';
             } else {
                 const diff = Math.ceil((dataValidade - new Date()) / (1000 * 60 * 60 * 24));
-                document.getElementById('status-acesso').innerText = `Vence em: ${dataValidade.toLocaleDateString('pt-BR')}`;
+                const dataFormatada = dataValidade.toLocaleDateString('pt-BR');
+                document.getElementById('status-acesso').innerText = `Vence em: ${dataFormatada}`;
                 
                 if (diff <= 3) {
                     document.getElementById('vencimento-alert').style.display = 'block';
