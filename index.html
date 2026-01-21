@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador |WA|</title>
+    <title>ZapFlow | Gestão V33</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ESTILOS V32 */
+        /* ESTILOS V33 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -170,7 +170,9 @@
     <script>
         // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
-        const DB_KEY = 'zapflow_v32';
+        const DB_KEY = 'zapflow_v33';
+        const SESSION_KEY = 'zapflow_session'; // CHAVE DA SESSÃO
+        
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let adminCache = [];
@@ -183,40 +185,45 @@
             let clean = dataStr.toString().replace(/['"]+/g, '').trim();
             if (clean.includes('/')) {
                 const parts = clean.split('/');
-                if (parts.length === 3) {
-                    const d = parseInt(parts[0], 10);
-                    const m = parseInt(parts[1], 10) - 1;
-                    const a = parseInt(parts[2], 10);
-                    return new Date(a, m, d);
-                }
+                if (parts.length === 3) return new Date(parts[2], parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
             }
             if (clean.includes('-')) return new Date(clean + 'T00:00:00');
             return new Date(clean);
         }
 
-        // --- CONEXÃO (FIXED) ---
-        async function conectarBanco() {
+        // --- INICIALIZAÇÃO (ANTI-F5) ---
+        window.onload = function() {
+            const sessao = localStorage.getItem(SESSION_KEY);
+            if (sessao) {
+                try {
+                    const dados = JSON.parse(atob(sessao)); // Decodifica Base64
+                    document.getElementById('user').value = dados.u;
+                    document.getElementById('pass').value = dados.p;
+                    conectarBanco(true); // Login automático
+                } catch(e) { localStorage.removeItem(SESSION_KEY); }
+            }
+        };
+
+        // --- LOGIN ---
+        async function conectarBanco(silencioso = false) {
             const btn = document.querySelector('#login-screen button');
             const loader = document.getElementById('loading');
             const msg = document.getElementById('msg-login');
             const uInput = document.getElementById('user').value.trim().toLowerCase();
             const pInput = document.getElementById('pass').value.trim();
 
-            if(!uInput || !pInput) { msg.innerText = "Preencha todos os campos."; return; }
+            if(!uInput || !pInput) return;
 
-            btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "Conectando...";
+            if(!silencioso) { btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "Conectando..."; }
 
             try {
                 const response = await fetch(PLANILHA_URL + '&cache=' + new Date().getTime());
-                if(!response.ok) throw new Error("Planilha não acessível.");
-                
                 const csvData = await response.text();
                 const linhas = csvData.split(/\r?\n/);
                 let achou = null;
                 adminCache = [];
 
                 for (let i = 1; i < linhas.length; i++) {
-                    if (!linhas[i].trim()) continue;
                     const cols = linhas[i].split(',');
                     if (cols.length >= 3) {
                         const pu = (cols[0] || '').replace(/['"]+/g, '').trim();
@@ -224,23 +231,23 @@
                         const pd = (cols[2] || '').replace(/['"]+/g, '').trim();
                         const pwa = (cols[3] || '').replace(/['"]+/g, '').trim();
                         const pval = (cols[4] || '').replace(/['"]+/g, '').trim();
-
                         if(pu) adminCache.push({user: pu, pass: pp, date: pd, zap: pwa, val: pval});
-                        if (pu.toLowerCase() === uInput && pp === pInput) {
-                            achou = { user: pu, validade: pd };
-                        }
+                        if (pu.toLowerCase() === uInput && pp === pInput) achou = { user: pu, validade: pd };
                     }
                 }
 
                 if (achou) {
+                    // SALVA SESSÃO
+                    const sessao = btoa(JSON.stringify({u: uInput, p: pInput}));
+                    localStorage.setItem(SESSION_KEY, sessao);
                     validarAcesso(achou);
                 } else {
-                    msg.innerText = "Usuário ou senha incorretos.";
+                    localStorage.removeItem(SESSION_KEY);
+                    msg.innerText = "Sessão expirada ou dados incorretos.";
                     btn.style.display = 'block'; loader.style.display = 'none';
                 }
             } catch (err) {
-                console.error("Erro no login:", err);
-                msg.innerText = "Erro ao conectar com a planilha. Verifique o compartilhamento.";
+                msg.innerText = "Erro de conexão.";
                 btn.style.display = 'block'; loader.style.display = 'none';
             }
         }
@@ -248,18 +255,11 @@
         function validarAcesso(dados) {
             const hoje = new Date();
             const validade = parseDataBR(dados.validade);
-            
-            if (isNaN(validade.getTime())) {
-                document.getElementById('msg-login').innerText = "Erro de data na planilha.";
-                document.querySelector('#login-screen button').style.display = 'block';
-                document.getElementById('loading').style.display = 'none';
-                return;
-            }
-
+            if (isNaN(validade.getTime())) return logout();
             if (dados.user !== 'admin' && hoje > validade) {
-                document.getElementById('msg-login').innerText = "Acesso expirado! Renove o plano.";
-                document.querySelector('#login-screen button').style.display = 'block';
+                document.getElementById('msg-login').innerText = "Acesso expirado!";
                 document.getElementById('loading').style.display = 'none';
+                document.querySelector('#login-screen button').style.display = 'block';
                 return;
             }
             currentUser = dados.user;
@@ -272,7 +272,6 @@
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
             document.getElementById('ola-user').innerText = "Olá, " + user;
-            
             if (user === 'admin') {
                 document.getElementById('status-acesso').innerText = "Painel Master";
                 document.getElementById('btn-open-admin').classList.remove('hidden');
@@ -280,12 +279,14 @@
                 const diff = Math.ceil((dataValidade - new Date()) / (1000 * 60 * 60 * 24));
                 document.getElementById('status-acesso').innerText = `Vence em: ${dataValidade.toLocaleDateString('pt-BR')}`;
                 document.getElementById('btn-open-admin').classList.add('hidden');
-                if (diff <= 5) {
-                    document.getElementById('vencimento-alert').style.display = 'flex';
-                    document.getElementById('dias-restantes').innerText = diff;
-                }
+                if (diff <= 5) document.getElementById('vencimento-alert').style.display = 'flex';
             }
             renderizar();
+        }
+
+        function logout() {
+            localStorage.removeItem(SESSION_KEY);
+            location.reload();
         }
 
         // --- PAINEL ADMIN ---
@@ -293,20 +294,17 @@
             document.getElementById('modal-admin').classList.add('show');
             const list = document.getElementById('admin-users-list');
             list.innerHTML = '';
-
             adminCache.forEach((u, index) => {
                 if(u.user === 'admin') return;
                 const val = parseDataBR(u.date);
                 const diff = Math.ceil((val - new Date()) / (1000 * 60 * 60 * 24));
                 const zapLimpo = (u.zap || '').replace(/\D/g, '');
-                let valBadge = u.val ? `<span class="value-badge">R$ ${u.val}</span>` : '';
-
                 const div = document.createElement('div');
                 div.className = 'user-row';
                 div.innerHTML = `
                     <div class="user-head">
-                        <div><strong>${u.user}</strong>${valBadge}</div>
-                        <span style="color:${diff>0?'green':'red'}; font-size:12px; font-weight:bold;">${diff>0?diff+'d':'EXP'}</span>
+                        <div><strong>${u.user}</strong>${u.val?`<span class="value-badge">R$ ${u.val}</span>`:''}</div>
+                        <span style="color:${diff>0?'green':'red'}; font-weight:bold;">${diff>0?diff+'d':'EXP'}</span>
                     </div>
                     <div class="user-actions">
                         ${zapLimpo ? `<button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${zapLimpo}')">💬</button>
@@ -346,13 +344,13 @@
 
         function copiarLinhaPlanilha() {
             const n=document.getElementById('edit-name').value, p=document.getElementById('edit-pass').value, w=document.getElementById('edit-wa').value, v=document.getElementById('edit-val').value, dI=document.getElementById('edit-date').value;
-            if(!dI) return alert("Data!");
+            if(!dI) return;
             const pt=dI.split('-');
             const csv = `${n},${p},${pt[2]}/${pt[1]}/${pt[0]},${w},${v}`;
             const box = document.getElementById('manual-copy-box');
             box.innerText = csv; box.style.display = 'block';
             navigator.clipboard.writeText(csv).then(() => {
-                alert("Copiado! Cole na planilha.");
+                alert("Copiado!");
                 window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0');
             });
         }
@@ -372,8 +370,7 @@
         }
         function limparSalvos(){ if(confirm("Limpar?")){db[currentUser].salvos=[]; salvarLocal(); renderizar();}}
         function copiarPix(){ navigator.clipboard.writeText("144.352.427-10"); alert("Copiado!");}
-        function enviarComprovante(){ window.open(`https://wa.me/5521970458286?text=Pagamento comprovante user: ${currentUser}`);}
-        function logout(){ location.reload();}
+        function enviarComprovante(){ window.open(`https://wa.me/5521970458286?text=Comprovante user: ${currentUser}`);}
         function fecharModal(id){ document.getElementById(id).classList.remove('show');}
         function abrirModalRenovar(){ document.getElementById('modal-renovar').classList.add('show');}
 
@@ -393,4 +390,3 @@
     </script>
 </body>
 </html>
-
