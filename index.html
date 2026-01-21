@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZapFlow | Gestão Integrada</title>
+    <title>ZapFlow | Gestão V22</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* DESIGN SYSTEM V21 */
+        /* ESTILOS V22 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -19,12 +19,11 @@
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         
-        /* Variantes */
         button.secondary { background: #e5e7eb; color: var(--text); }
         button.danger { background: var(--danger); }
         button.admin-btn { background: var(--text); }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-        button.edit-btn { background: var(--blue); } /* Lápis Azul */
+        button.edit-btn { background: var(--blue); }
         button.sheet-btn { background: #107c10; color: white; margin-bottom: 10px; }
         
         .btn-auto { width: auto !important; padding: 6px 12px; font-size: 13px; }
@@ -47,6 +46,9 @@
 
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Copy Box */
+        .copy-box { background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 10px 0; font-size: 12px; border: 1px dashed #6366f1; display: none; }
     </style>
 </head>
 <body>
@@ -132,56 +134,59 @@
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
             <h3>✏️ Editar Usuário</h3>
-            <p style="color:#666; font-size:12px;">Altere os dados e o sistema gera a linha para você colar na planilha.</p>
+            <p style="color:#666; font-size:12px;">1. Gere a linha abaixo.<br>2. Cole na sua Planilha Google.</p>
             
-            <label>Usuário</label>
-            <input type="text" id="edit-name">
-            
-            <label>Senha</label>
-            <input type="text" id="edit-pass">
-            
-            <label>WhatsApp</label>
-            <input type="text" id="edit-wa">
+            <label>Usuário</label><input type="text" id="edit-name">
+            <label>Senha</label><input type="text" id="edit-pass">
+            <label>WhatsApp</label><input type="text" id="edit-wa">
 
             <div style="background: #f0fdf4; padding:10px; border-radius:8px; border:1px solid #10b981; margin: 15px 0;">
-                <label style="margin:0; color:#064e3b;">Data de Validade Atual</label>
+                <label style="margin:0; color:#064e3b;">Validade</label>
                 <input type="date" id="edit-date" style="margin:0;">
-                
-                <label style="margin-top:10px; color:#064e3b;">Adicionar Dias (+)</label>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; margin-top:5px;">
                     <button onclick="somarDiasEdicao(30)" class="secondary btn-small">+30</button>
                     <button onclick="somarDiasEdicao(15)" class="secondary btn-small">+15</button>
-                    <button onclick="somarDiasEdicao(1)" class="secondary btn-small">+1</button>
                 </div>
             </div>
 
-            <button onclick="copiarLinhaPlanilha()" class="admin-btn">📋 Copiar Dados e Abrir Planilha</button>
+            <button onclick="copiarLinhaPlanilha()" class="admin-btn">📋 Gerar Linha e Copiar</button>
+            
+            <div id="manual-copy-box" class="copy-box"></div>
         </div>
     </div>
 
     <script>
         // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgml7_32q0TOdv8FtFUh-aUFj0WDMD4JiPNziIvpncAE_BHeATOwxsSX6L0iUcak79TdR45sVi8qSz/pub?output=csv';
-        const DB_KEY = 'zapflow_v21';
+        const DB_KEY = 'zapflow_v22';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let adminCache = [];
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-        // --- DATA MAGIC ---
+        // --- TRATAMENTO DE DATA ROBUSTO ---
         function parseDataBR(dataStr) {
             if (!dataStr) return new Date();
             let clean = dataStr.replace(/['"]/g, '').trim();
-            if (clean.includes('-')) return new Date(clean + 'T00:00:00');
-            if (clean.includes('/')) {
-                const p = clean.split('/');
-                return new Date(p[2], p[1] - 1, p[0]);
+            
+            // Tenta formato ISO (2026-12-31)
+            if (clean.includes('-')) {
+                const parts = clean.split('-');
+                if(parts[0].length === 4) return new Date(clean + 'T00:00:00');
             }
-            return new Date(clean);
+            
+            // Tenta formato BR (31/12/2026)
+            if (clean.includes('/')) {
+                const parts = clean.split('/');
+                if(parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            
+            return new Date(clean); // Tenta nativo
         }
 
         function formatDateParaInput(dateObj) {
+            if(isNaN(dateObj.getTime())) return '';
             return dateObj.toISOString().split('T')[0];
         }
 
@@ -197,13 +202,19 @@
 
             btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "";
 
-            fetch(PLANILHA_URL).then(r => r.text()).then(d => {
+            fetch(PLANILHA_URL).then(r => {
+                if(!r.ok) throw new Error("Erro ao acessar planilha");
+                return r.text();
+            }).then(d => {
                 const linhas = d.split('\n');
                 let achou = null;
                 adminCache = [];
 
                 for (let i = 1; i < linhas.length; i++) {
-                    const cols = linhas[i].split(',');
+                    const line = linhas[i].trim();
+                    if(!line) continue; // Pula linha vazia
+
+                    const cols = line.split(',');
                     if (cols.length >= 3) {
                         const pu = cols[0].replace(/['"]+/g, '').trim();
                         const pp = cols[1].replace(/['"]+/g, '').trim();
@@ -216,9 +227,13 @@
                 }
 
                 if (achou) validarAcesso(achou);
-                else throw new Error("Usuário não encontrado.");
+                else {
+                    msg.innerText = "Usuário ou senha incorretos.";
+                    btn.style.display = 'block'; loader.style.display = 'none';
+                }
             }).catch(err => {
-                msg.innerText = "Erro ao conectar.";
+                console.error(err);
+                msg.innerText = "Erro de conexão. Verifique internet.";
                 btn.style.display = 'block'; loader.style.display = 'none';
             });
         }
@@ -227,8 +242,15 @@
             const hoje = new Date();
             const validade = parseDataBR(dados.validade);
             
+            if (isNaN(validade.getTime())) {
+                document.getElementById('msg-login').innerText = "Erro na data da planilha (Formato Inválido).";
+                document.querySelector('#login-screen button').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
             if (dados.user !== 'admin' && hoje > validade) {
-                document.getElementById('msg-login').innerText = "Acesso vencido! Pague o Pix.";
+                document.getElementById('msg-login').innerText = "Acesso vencido! Renove.";
                 document.querySelector('#login-screen button').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
                 return;
@@ -250,12 +272,15 @@
                 document.getElementById('btn-open-admin').classList.remove('hidden');
             } else {
                 const diff = Math.ceil((dataValidade - new Date()) / (1000 * 60 * 60 * 24));
-                const dF = dataValidade.toLocaleDateString('pt-BR');
-                document.getElementById('status-acesso').innerText = `Vence: ${dF}`;
+                const dia = String(dataValidade.getDate()).padStart(2, '0');
+                const mes = String(dataValidade.getMonth() + 1).padStart(2, '0');
+                const ano = dataValidade.getFullYear();
+                
+                document.getElementById('status-acesso').innerText = `Vence: ${dia}/${mes}/${ano}`;
                 document.getElementById('btn-open-admin').classList.add('hidden');
                 
                 if (diff <= 5) {
-                    document.getElementById('vencimento-alert').style.display = 'block';
+                    document.getElementById('vencimento-alert').style.display = 'flex';
                     document.getElementById('dias-restantes').innerText = diff;
                 } else {
                     document.getElementById('vencimento-alert').style.display = 'none';
@@ -264,7 +289,7 @@
             renderizar();
         }
 
-        // --- PAINEL ADMIN COM EDIÇÃO ---
+        // --- PAINEL ADMIN ---
         function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const list = document.getElementById('admin-users-list');
@@ -275,8 +300,8 @@
                 
                 const val = parseDataBR(u.date);
                 const diff = Math.ceil((val - new Date()) / (1000 * 60 * 60 * 24));
-                const sttCol = diff > 0 ? 'green' : 'red';
-                const sttTxt = diff > 0 ? `${diff} dias` : 'Vencido';
+                const sttColor = diff > 0 ? 'green' : 'red';
+                const sttText = diff > 0 ? `${diff} dias` : 'Vencido';
                 
                 let btns = '';
                 if(u.zap) {
@@ -292,7 +317,7 @@
                 div.innerHTML = `
                     <div class="user-head">
                         <strong>${u.user}</strong>
-                        <span style="color:${sttCol}; font-weight:bold; font-size:12px;">${sttTxt}</span>
+                        <span style="color:${sttColor}; font-weight:bold; font-size:12px;">${sttText}</span>
                     </div>
                     <div class="user-actions">
                         ${btns}
@@ -303,24 +328,28 @@
             });
         }
 
-        // --- LÓGICA DE EDIÇÃO ---
+        // --- EDIÇÃO INTELIGENTE ---
         function prepararEdicao(index) {
             const u = adminCache[index];
             document.getElementById('edit-name').value = u.user;
             document.getElementById('edit-pass').value = u.pass;
             document.getElementById('edit-wa').value = u.zap;
             
-            // Converte data para o input date
             const dataObj = parseDataBR(u.date);
-            document.getElementById('edit-date').value = formatDateParaInput(dataObj);
+            if(!isNaN(dataObj.getTime())) {
+                document.getElementById('edit-date').value = formatDateParaInput(dataObj);
+            }
 
+            document.getElementById('manual-copy-box').style.display = 'none';
             fecharModal('modal-admin');
             document.getElementById('modal-edit-user').classList.add('show');
         }
 
         function somarDiasEdicao(dias) {
             const input = document.getElementById('edit-date');
-            if(!input.value) return;
+            if(!input.value) {
+                input.value = formatDateParaInput(new Date());
+            }
             const atual = new Date(input.value);
             atual.setDate(atual.getDate() + dias);
             input.value = formatDateParaInput(atual);
@@ -330,19 +359,25 @@
             const n = document.getElementById('edit-name').value;
             const p = document.getElementById('edit-pass').value;
             const w = document.getElementById('edit-wa').value;
-            const dInput = document.getElementById('edit-date').value; // yyyy-mm-dd
+            const dInput = document.getElementById('edit-date').value; 
             
-            // Converte para dd/mm/yyyy para ficar bonito na planilha (opcional, mas bom)
+            if(!dInput) return alert("Selecione uma data!");
+
             const partes = dInput.split('-');
             const dataBR = `${partes[2]}/${partes[1]}/${partes[0]}`;
-
-            // CSV FORMAT: user,pass,date,wa
             const csvLine = `${n},${p},${dataBR},${w}`;
             
+            // Mostra a caixa de cópia manual (Fallback)
+            const box = document.getElementById('manual-copy-box');
+            box.innerText = csvLine;
+            box.style.display = 'block';
+
+            // Tenta copiar automático
             navigator.clipboard.writeText(csvLine).then(() => {
-                alert("DADOS COPIADOS!\n\n1. A planilha vai abrir.\n2. Ache a linha do usuário.\n3. Cole (Ctrl+V) os novos dados lá.");
+                alert("COPIADO! Agora abra a planilha e cole (Ctrl+V) na linha do usuário.");
                 window.open('https://docs.google.com/spreadsheets/u/0/', '_blank');
-                fecharModal('modal-edit-user');
+            }).catch(err => {
+                alert("Não foi possível copiar automático. Por favor, COPIE o texto azul abaixo e cole na planilha.");
             });
         }
 
@@ -351,7 +386,7 @@
             document.getElementById('cupom-result').innerText = c;
             document.getElementById('cupom-result').style.display = 'block';
             navigator.clipboard.writeText(c);
-            alert("Cupom copiado! (Lembre-se de aumentar a data na planilha manualmente).");
+            alert("Cupom copiado!");
         }
 
         // --- LINKS PADRÃO ---
