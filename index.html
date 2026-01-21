@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZapFlow | Gestão Profissional</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- VARIÁVEIS --- */
+        :root {
+            --primary: #10b981; --primary-dark: #059669; --bg-body: #f3f4f6; --bg-card: #ffffff;
+            --text-main: #1f2937; --text-muted: #6b7280; --danger: #ef4444; --blue: #3b82f6;
+            --gold: #f59e0b; --purple: #8b5cf6; --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- BASE --- */
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        /* --- CONTAINER --- */
+        .container { max-width: 900px; margin: 20px auto; background: var(--bg-card); padding: 40px; border-radius: 20px; box-shadow: var(--shadow); }
+        .hidden { display: none !important; }
+
+        /* --- ELEMENTOS --- */
+        input, textarea, select { width: 100%; padding: 14px; margin-bottom: 15px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; }
+        input:focus { outline: none; border-color: var(--primary); background: #fff; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+
+        button { cursor: pointer; background: var(--primary); color: white; border: none; font-weight: 600; padding: 12px; border-radius: var(--radius); width: 100%; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        button:hover { filter: brightness(0.9); transform: translateY(-2px); }
+        
+        /* Variantes */
+        button.secondary { background: #e5e7eb; color: var(--text-main); }
+        button.danger { background: #fee2e2; color: var(--danger); }
+        button.admin-btn { background: #1f2937; }
+        button.export-btn { background: var(--blue); }
+        button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        button.pass-btn { background: #f3e8ff; color: var(--purple); }
+        button.urgent-btn { background: #ea580c; color: white; }
+        button.pix-copy-btn { background: var(--purple); margin-top: 10px; }
+
+        .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; }
+        .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+        .btn-support { background: linear-gradient(135deg, #25d366, #128c7e); color: white; text-decoration: none; padding: 12px 25px; border-radius: 50px; font-weight: 600; display: inline-flex; gap: 10px; box-shadow: var(--shadow); }
+
+        /* --- LAYOUT --- */
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin: 30px 0 15px; background: #f9fafb; padding: 10px 15px; border-radius: var(--radius); }
+        .input-group { display: flex; gap: 10px; }
+
+        /* --- LISTAS --- */
+        .card { background: white; border: 1px solid #f3f4f6; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; border-radius: var(--radius); transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .link-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace; }
+        
+        .user-row { background: white; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; border-radius: var(--radius); }
+        .user-info { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .user-actions { display: flex; justify-content: flex-end; gap: 5px; border-top: 1px solid #f3f4f6; padding-top: 10px; }
+
+        /* --- AVISOS --- */
+        .expiry-alert { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 15px; border-radius: var(--radius); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; animation: slideDown 0.5s ease; }
+        @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- MODAIS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-overlay.show { display: flex; animation: fadeIn 0.3s; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; position: relative; animation: slideUp 0.3s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .close-modal { position: absolute; top: 20px; right: 25px; cursor: pointer; font-size: 24px; color: #9ca3af; }
+        @keyframes fadeIn { from{opacity:0}to{opacity:1}} @keyframes slideUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+        /* --- EXTRAS --- */
+        #login-screen { text-align: center; max-width: 400px; margin: 40px auto; }
+        .pix-box { background: #f3e8ff; padding: 20px; border-radius: var(--radius); text-align: center; border: 1px solid #d8b4fe; margin-bottom: 20px; }
+        .coupon-result { background: #ecfdf5; border: 2px dashed var(--primary); padding: 15px; text-align: center; margin-top: 15px; display: none; }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; margin: 10px; }
+            .header-top, .expiry-alert, .input-group { flex-direction: column; gap: 15px; }
+            .header-top > div:last-child { width: 100%; align-items: flex-start; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-screen">
+            <h1 style="font-size: 4rem; margin: 0;">⚡</h1>
+            <h2 style="margin: 0 0 30px;">ZapFlow</h2>
+            <div style="text-align: left;">
+                <label>Usuário</label><input type="text" id="login-user" placeholder="Usuário">
+                <label>Senha</label><input type="password" id="login-pass" placeholder="Senha">
+            </div>
+            <button onclick="tentarLogin()" style="margin-top: 10px; padding: 15px;">🚀 Entrar</button>
+            <div id="login-status" style="margin-top: 15px; font-weight: bold; min-height: 20px;"></div>
+            <div style="margin-top: 40px;">
+                <a href="https://wa.me/5521970458286" target="_blank" class="btn-support"><span>💬</span> Suporte WhatsApp</a>
+            </div>
+            <p style="margin-top: 30px; font-size: 12px; opacity: 0.5;">Admin: admin / admin</p>
+        </div>
+
+        <div id="app-screen" class="hidden">
+            <div id="expiry-warning" class="expiry-alert hidden">
+                <div>
+                    <h4 style="margin:0; color:#9a3412;">⚠️ Atenção! Expira em <span id="days-left-count">0</span> dias.</h4>
+                    <small>Renove agora para evitar bloqueio.</small>
+                </div>
+                <button onclick="abrirModalRenovar()" class="btn-auto urgent-btn">💎 Renovar Agora</button>
+            </div>
+
+            <div class="header-top">
+                <div>
+                    <small>Bem-vindo,</small>
+                    <h3 id="welcome-msg">...</h3>
+                    <div id="expiration-display" style="font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 20px; background: #f3f4f6; display: inline-block;"></div>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                    <button onclick="abrirModalSenha()" class="btn-auto pass-btn">🔑 Senha</button>
+                    <button onclick="logout()" class="btn-auto danger">🚪 Sair</button>
+                    <div style="width: 100%; height: 5px;"></div>
+                    <button onclick="abrirModalRenovar()" class="btn-auto vip-btn">💎 Renovar</button>
+                    <button id="btn-open-admin" class="btn-auto admin-btn hidden" onclick="abrirAdminPanel()">⚙️ Admin</button>
+                </div>
+            </div>
+
+            <div class="card-area">
+                <h4>📥 Adicionar Links</h4>
+                <textarea id="input-links" rows="3" placeholder="Cole contatos..."></textarea>
+                <div class="input-group">
+                    <label class="secondary" style="background: #f3f4f6; padding: 12px; border-radius: var(--radius); text-align: center; cursor: pointer; flex: 1; display:flex; align-items:center; justify-content:center; border:1px solid #e5e7eb;">
+                        📂 Importar .txt <input type="file" id="file-input" accept=".txt" style="display: none;">
+                    </label>
+                    <button onclick="processarLinks()" style="flex: 1;">⚡ Carregar</button>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h4 style="color: var(--primary-dark); margin:0;">📞 Pendentes (<span id="count-pending">0</span>)</h4>
+                <button onclick="limparLista('pendentes')" class="danger btn-auto btn-small">🗑️ Limpar</button>
+            </div>
+            
+            <div id="undo-area" class="hidden" style="background: #fffbeb; padding: 12px; margin-bottom: 15px; border-radius: var(--radius); border: 1px solid #fcd34d; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #92400e;">↩️ Aberto: <b id="last-opened-url">...</b></span>
+                <button onclick="desfazerAcao()" class="secondary btn-auto">Desfazer</button>
+            </div>
+
+            <div id="links-list"></div>
+            <div id="pagination-area" class="pagination-controls hidden">
+                <button onclick="mudarPagina(-1)" id="btn-prev" class="secondary btn-auto">⬅️</button>
+                <span id="page-info" style="font-weight: 600; font-size: 14px;">1/1</span>
+                <button onclick="mudarPagina(1)" id="btn-next" class="secondary btn-auto">➡️</button>
+            </div>
+
+            <div class="section-header" style="margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                <h4 style="color: var(--blue); margin:0;">💾 Salvos (<span id="count-saved">0</span>)</h4>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="exportarSalvos()" class="export-btn btn-auto btn-small">📥 Baixar</button>
+                    <button onclick="limparLista('salvos')" class="danger btn-auto btn-small">🗑️ Limpar</button>
+                </div>
+            </div>
+            <div id="saved-list"></div>
+        </div>
+    </div>
+
+    <div id="modal-expiry-alert" class="modal-overlay">
+        <div class="modal-content" style="text-align: center; border: 2px solid #f59e0b;">
+            <div style="font-size: 50px;">⚠️</div>
+            <h3 style="color: #b45309;">Atenção!</h3>
+            <p>Seu acesso expira em <strong id="popup-days-count" style="color: #ef4444; font-size: 20px;">0</strong> dias.</p>
+            <div style="display: grid; gap: 10px; margin-top: 20px;">
+                <button onclick="abrirModalRenovar(); fecharModal('modal-expiry-alert')" class="vip-btn">💎 Renovar Agora</button>
+                <button onclick="fecharModal('modal-expiry-alert')" class="secondary">Lembrar Depois</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-change-pass" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModal('modal-change-pass')">&times;</span>
+            <h3 style="text-align: center;">🔑 Alterar Senha</h3>
+            <label>Senha Atual</label><input type="password" id="cp-old">
+            <label>Nova Senha</label><input type="password" id="cp-new">
+            <button onclick="trocarMinhaSenha()">Salvar</button>
+        </div>
+    </div>
+
+    <div id="modal-renovar" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModal('modal-renovar')">&times;</span>
+            <div style="text-align: center;">
+                <h2 style="font-size: 3rem; margin:0;">💎</h2>
+                <h3 style="color: var(--gold);">Renovar Acesso</h3>
+            </div>
+            <div class="pix-box">
+                <h4 style="margin:0; color: var(--purple);">CHAVE PIX (CPF)</h4>
+                <div style="background: white; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 18px; border-radius: 8px; border: 2px dashed #d8b4fe;">
+                    <span id="pix-key-text">144.352.427-10</span>
+                </div>
+                <div style="text-align: left; font-size: 13px; color: #6b7280;">
+                    <strong>Favorecido:</strong> Gabriel Martins Barbosa<br><strong>Banco:</strong> Nu Bank
+                </div>
+                <button onclick="copiarPix()" class="pix-copy-btn">📋 Copiar Chave</button>
+            </div>
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+            <label>Cupom:</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="coupon-input" placeholder="VIP-1234" style="text-transform: uppercase; margin:0;">
+                <button onclick="resgatarCupom()" class="vip-btn" style="width: auto;">Validar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
+            <h2 style="color: var(--dark);">⚙️ Gestão</h2>
+            
+            <div style="background: #fffbeb; padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #fcd34d;">
+                <h4 style="margin-top:0; color: #b45309;">🎫 Gerar Cupom (2h)</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="margin:0;">Exp:</label>
+                    <input type="number" id="coupon-days" value="30" style="margin:0; width: 60px; text-align: center;">
+                    <span>dias</span>
+                    <button onclick="gerarCupom()" class="admin-btn" style="margin:0; flex: 1;">Gerar</button>
+                </div>
+                <div id="coupon-display-area" class="coupon-result">
+                    <span id="generated-code" style="font-weight: bold; font-size: 20px; display: block; margin: 5px 0;">---</span>
+                    <button class="secondary btn-auto" onclick="copiarCupom()" style="font-size: 12px;">Copiar</button>
+                </div>
+            </div>
+            
+            <div style="background: #ecfdf5; padding: 15px; border-radius: var(--radius); margin-bottom: 20px;">
+                <h4 style="margin-top:0; color: var(--primary-dark);">Novo Usuário</h4>
+                <div style="display: grid; gap: 10px;">
+                    <input type="text" id="new-user-name" placeholder="Nome" style="margin:0;">
+                    <input type="text" id="new-user-pass" placeholder="Senha" style="margin:0;">
+                    <input type="text" id="new-user-wa" placeholder="WhatsApp" style="margin:0;">
+                    <button onclick="criarUsuario()" style="margin-top: 5px;">+ Criar</button>
+                </div>
+            </div>
+            <h4>Usuários Ativos</h4>
+            <div id="users-list-container" style="max-height: 250px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div id="modal-admin-edit" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModal('modal-admin-edit')">&times;</span>
+            <h3>✏️ Editar Cliente</h3>
+            
+            <div style="background: #f3f4f6; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <small>Vencimento Atual:</small>
+                <div id="adm-edit-current-exp" style="font-weight: bold; color: var(--primary-dark);">...</div>
+            </div>
+
+            <label>Nome</label><input type="text" id="adm-edit-name">
+            <label>Senha</label><input type="text" id="adm-edit-pass">
+            <label>WhatsApp</label><input type="text" id="adm-edit-wa">
+            
+            <label style="margin-top: 15px;">Adicionar/Remover Dias</label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                <input type="number" id="adm-edit-days" placeholder="0" value="0" style="margin:0;">
+                <span style="font-size: 11px; color: #666;">(Use - para tirar)</span>
+            </div>
+
+            <button onclick="salvarEdicaoCompleta()" class="admin-btn">💾 Salvar Alterações</button>
+        </div>
+    </div>
+
+    <div id="modal-save-link" class="modal-overlay">
+        <div class="modal-content" style="text-align: center; max-width: 350px;">
+            <div style="font-size: 4rem;">📲</div>
+            <h3>Salvar?</h3>
+            <div style="display: grid; gap: 10px; margin-top: 20px;">
+                <button onclick="confirmarSalvar(true)">✅ Sim</button>
+                <button onclick="confirmarSalvar(false)" class="secondary">🗑️ Não</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DB_KEY = 'zapManager_v7'; 
+        let db = { users: {}, coupons: [] }; 
+        let currentPage = 1; const itemsPerPage = 5;
+
+        function inicializarBanco() {
+            try {
+                const dados = localStorage.getItem(DB_KEY);
+                if (dados) db = JSON.parse(dados);
+                if (!db.users || !db.users['admin']) {
+                    if(!db.users) db.users = {};
+                    db.users['admin'] = { pass: 'admin', role: 'master', expiration: null, links: [], saved: [] };
+                }
+                if (!db.coupons) db.coupons = [];
+                salvarDB();
+            } catch (e) { localStorage.removeItem(DB_KEY); location.reload(); }
+        }
+        function salvarDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+        inicializarBanco();
+
+        let currentUser = null; let tempLink = null; let lastDeletedLink = null; let adminEditingUser = null; 
+
+        // LOGIN
+        function tentarLogin() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const status = document.getElementById('login-status');
+            if (!user || !pass) { status.innerText = "Preencha tudo!"; status.style.color = "var(--danger)"; return; }
+
+            if (db.users[user] && db.users[user].pass === pass) {
+                const u = db.users[user];
+                if (u.role !== 'master' && u.expiration && new Date().getTime() > u.expiration) {
+                    status.innerText = "⛔ Acesso Expirado!"; status.style.color = "var(--danger)"; return;
+                }
+                status.innerText = "Entrando..."; status.style.color = "var(--primary)";
+                setTimeout(() => { currentUser = user; currentPage = 1; iniciarApp(); }, 500);
+            } else { status.innerText = "Dados incorretos."; status.style.color = "var(--danger)"; }
+        }
+
+        function iniciarApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('welcome-msg').innerText = currentUser;
+            const u = db.users[currentUser];
+            const disp = document.getElementById('expiration-display');
+            const alertBox = document.getElementById('expiry-warning');
+            
+            if(u.role === 'master') {
+                disp.innerText = "👑 Mestre"; disp.style.background = "#fef3c7"; disp.style.color = "#b45309";
+                document.getElementById('btn-open-admin').classList.remove('hidden');
+                alertBox.classList.add('hidden');
+            } else if (u.expiration) {
+                const now = new Date().getTime();
+                const dias = Math.ceil((u.expiration - now) / 86400000);
+                disp.innerHTML = dias > 0 ? `⏳ ${dias} dias` : `⚠️ EXPIRADO`;
+                disp.style.background = dias > 3 ? "#ecfdf5" : "#fef2f2";
+                disp.style.color = dias > 3 ? "#047857" : "#ef4444";
+                document.getElementById('btn-open-admin').classList.add('hidden');
+
+                if (dias <= 5 && dias > 0) {
+                    // ALERTA FAIXA
+                    alertBox.classList.remove('hidden'); alertBox.style.display = 'flex';
+                    document.getElementById('days-left-count').innerText = dias;
+                    // ALERTA POPUP
+                    document.getElementById('popup-days-count').innerText = dias;
+                    document.getElementById('modal-expiry-alert').classList.add('show');
+                } else {
+                    alertBox.classList.add('hidden');
+                }
+            } else {
+                disp.innerText = "✅ Vitalício"; document.getElementById('btn-open-admin').classList.add('hidden');
+            }
+            atualizarListaLinks();
+        }
+
+        function logout() { currentUser = null; location.reload(); }
+
+        // ACTIONS
+        function abrirModalSenha() { document.getElementById('modal-change-pass').classList.add('show'); document.getElementById('cp-old').value=''; document.getElementById('cp-new').value=''; }
+        function trocarMinhaSenha() {
+            const o = document.getElementById('cp-old').value.trim(); const n = document.getElementById('cp-new').value.trim();
+            if(!o||!n) return alert("Preencha tudo.");
+            if(db.users[currentUser].pass!==o) return alert("Senha atual errada.");
+            db.users[currentUser].pass=n; salvarDB(); alert("Sucesso!"); fecharModal('modal-change-pass');
+        }
+
+        function abrirModalRenovar() { document.getElementById('modal-renovar').classList.add('show'); document.getElementById('coupon-input').value=''; }
+        function copiarPix() { navigator.clipboard.writeText("144.352.427-10").then(() => alert("Copiado!")); }
+        function gerarCupom() {
+            const d = parseInt(document.getElementById('coupon-days').value);
+            const c = 'VIP-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+            db.coupons.push({ code:c, days:d, expiresAt:new Date().getTime()+7200000, used:false });
+            salvarDB();
+            document.getElementById('coupon-display-area').style.display='block'; document.getElementById('generated-code').innerText=c;
+        }
+        function copiarCupom() { navigator.clipboard.writeText(document.getElementById('generated-code').innerText); alert("Copiado!"); }
+        function resgatarCupom() {
+            const i = document.getElementById('coupon-input').value.trim().toUpperCase();
+            const c = db.coupons.find(x => x.code === i);
+            if(!c) return alert("Inválido."); if(c.used) return alert("Já usado."); if(new Date().getTime()>c.expiresAt) return alert("Expirado.");
+            const u = db.users[currentUser];
+            let b = (u.expiration && u.expiration > new Date().getTime()) ? u.expiration : new Date().getTime();
+            const nd = new Date(b); nd.setDate(nd.getDate() + parseInt(c.days)); u.expiration = nd.getTime();
+            c.used=true; salvarDB(); alert(`+${c.days} dias!`); fecharModal('modal-renovar'); iniciarApp();
+        }
+
+        // ADMIN
+        function abrirAdminPanel() { document.getElementById('modal-admin').classList.add('show'); renderizarUsuarios(); }
+        function criarUsuario() {
+            const n=document.getElementById('new-user-name').value.trim(); const p=document.getElementById('new-user-pass').value.trim();
+            const w=document.getElementById('new-user-wa').value.replace(/\D/g, '');
+            if(!n||!p) return alert("Falta nome/senha"); if(db.users[n]) return alert("Já existe");
+            const d=new Date(); d.setDate(d.getDate()+30);
+            db.users[n] = { pass:p, role:'user', expiration:d.getTime(), whatsapp:w, links:[], saved:[] };
+            salvarDB(); renderizarUsuarios(); alert("Criado!");
+            document.getElementById('new-user-name').value=''; document.getElementById('new-user-pass').value=''; document.getElementById('new-user-wa').value='';
+        }
+        
+        function abrirEditarUsuarioAdmin(u) {
+            adminEditingUser=u; const d=db.users[u];
+            document.getElementById('adm-edit-name').value=u; 
+            document.getElementById('adm-edit-pass').value=d.pass; 
+            document.getElementById('adm-edit-wa').value=d.whatsapp||'';
+            document.getElementById('adm-edit-days').value = 0; // Reset dias
+
+            // Mostrar data atual formatada
+            let expStr = "Sem Validade";
+            if(d.expiration) {
+                expStr = new Date(d.expiration).toLocaleDateString('pt-BR');
+                const rest = Math.ceil((d.expiration - new Date().getTime())/86400000);
+                if(rest < 0) expStr += " (Vencido)";
+            }
+            document.getElementById('adm-edit-current-exp').innerText = expStr;
+
+            fecharModal('modal-admin'); document.getElementById('modal-admin-edit').classList.add('show');
+        }
+
+        function salvarEdicaoCompleta() {
+            const oldN=adminEditingUser; 
+            const newN=document.getElementById('adm-edit-name').value.trim();
+            const newP=document.getElementById('adm-edit-pass').value.trim(); 
+            const newW=document.getElementById('adm-edit-wa').value.replace(/\D/g,'');
+            const addDays = parseInt(document.getElementById('adm-edit-days').value);
+
+            if(!newN||!newP) return alert("Erro nos dados."); 
+            if(newN!==oldN && db.users[newN]) return alert("Nome em uso.");
+
+            // Lógica de Atualizar Dias
+            let newExp = db.users[oldN].expiration;
+            if(addDays !== 0) {
+                // Se não tiver data ou já venceu, começa de AGORA. Se ainda vale, soma ao final.
+                let base = new Date().getTime();
+                if(newExp && newExp > base) {
+                    base = newExp;
+                }
+                const d = new Date(base);
+                d.setDate(d.getDate() + addDays);
+                newExp = d.getTime();
+            }
+
+            // Atualiza Objeto
+            if(newN!==oldN) { 
+                db.users[newN]=db.users[oldN]; 
+                db.users[newN].pass=newP; 
+                db.users[newN].whatsapp=newW; 
+                db.users[newN].expiration=newExp;
+                delete db.users[oldN]; 
+            } else { 
+                db.users[oldN].pass=newP; 
+                db.users[oldN].whatsapp=newW;
+                db.users[oldN].expiration=newExp;
+            }
+            
+            salvarDB(); alert("Salvo!"); fecharModal('modal-admin-edit'); abrirAdminPanel();
+        }
+
+        function renderizarUsuarios() {
+            const c=document.getElementById('users-list-container'); c.innerHTML='';
+            Object.keys(db.users).forEach(u => {
+                if(db.users[u].role==='master') return;
+                const obj=db.users[u]; const r=Math.ceil((obj.expiration-new Date().getTime())/86400000);
+                const zap=obj.whatsapp||'';
+                const div=document.createElement('div'); div.className='user-row';
+                let btns='';
+                if(zap) {
+                    const link=`https://wa.me/55${zap}`; const msg=`🔐 *ZapFlow*\nUser: ${u}\nSenha: ${obj.pass}`;
+                    const send=`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`;
+                    btns=`<button class="btn-auto secondary btn-small" onclick="window.open('${link}','_blank')">💬</button>
+                          <button class="btn-auto vip-btn btn-small" onclick="window.open('${send}','_blank')">📨</button>`;
+                }
+                div.innerHTML=`
+                    <div class="user-info">
+                        <strong>${u}</strong>
+                        <span style="font-size:11px; font-weight:bold; color:${r>0?'#10b981':'#ef4444'}; background:${r>0?'#ecfdf5':'#fef2f2'}; padding:2px 6px; border-radius:4px;">${r>0?r+'d':'EXP'}</span>
+                    </div>
+                    <div class="user-actions">
+                        ${btns}
+                        <button class="edit-btn btn-auto btn-small" onclick="abrirEditarUsuarioAdmin('${u}')" style="background:var(--blue)">✏️</button>
+                        <button class="danger btn-auto btn-small" onclick="if(confirm('Apagar?')){delete db.users['${u}'];salvarDB();renderizarUsuarios();}">🗑️</button>
+                    </div>
+                `;
+                c.appendChild(div);
+            });
+        }
+
+        // LINKS
+        function mudarPagina(d) { currentPage+=d; atualizarListaLinks(); }
+        function processarLinks() {
+            const t=document.getElementById('input-links'); const l=t.value.split('\n'); let c=0;
+            l.forEach(x=>{if(x.trim()){db.users[currentUser].links.push(x.trim());c++}});
+            if(c>0){ t.value=''; salvarDB(); atualizarListaLinks(); }
+        }
+        document.getElementById('file-input').addEventListener('change', function(e){
+            const f=e.target.files[0]; if(!f)return;
+            const r=new FileReader(); r.onload=function(ev){
+                const l=ev.target.result.split('\n'); let c=0;
+                l.forEach(x=>{if(x.trim()){db.users[currentUser].links.push(x.trim());c++}});
+                salvarDB(); atualizarListaLinks(); e.target.value='';
+            }; r.readAsText(f);
+        });
+        function limparLista(t) { if(confirm("Certeza?")) { if(t==='pendentes') db.users[currentUser].links=[]; else db.users[currentUser].saved=[]; salvarDB(); atualizarListaLinks(); } }
+        function exportarSalvos() {
+            const s=db.users[currentUser].saved; if(!s.length)return alert("Vazio.");
+            const b=new Blob([s.join('\n')],{type:"text/plain"});
+            const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="salvos.txt";
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+        function atualizarListaLinks() {
+            const pd=document.getElementById('links-list'); const sd=document.getElementById('saved-list'); const pg=document.getElementById('pagination-area');
+            pd.innerHTML=''; sd.innerHTML='';
+            const u=db.users[currentUser]; const all=u.links;
+            document.getElementById('count-pending').innerText=all.length; document.getElementById('count-saved').innerText=u.saved.length;
+            const total=Math.ceil(all.length/itemsPerPage)||1;
+            if(currentPage>total) currentPage=total; if(currentPage<1) currentPage=1;
+            const start=(currentPage-1)*itemsPerPage; const pageLinks=all.slice(start, start+itemsPerPage);
+            
+            if(!pageLinks.length) { pd.innerHTML='<p style="text-align:center; color:#9ca3af; margin-top:20px;">Vazio</p>'; pg.classList.add('hidden'); }
+            else {
+                pageLinks.forEach((l,i)=>{
+                    const ri=start+i; const d=document.createElement('div'); d.className='card';
+                    d.innerHTML=`<span class="link-text" title="${l}">${l}</span> <button class="btn-auto" onclick="abrirZap(${ri})">Abrir ↗</button>`;
+                    pd.appendChild(d);
+                });
+                pg.classList.remove('hidden'); document.getElementById('page-info').innerText=`${currentPage}/${total}`;
+                document.getElementById('btn-prev').disabled=currentPage===1; document.getElementById('btn-next').disabled=currentPage===total;
+            }
+            if(!u.saved.length) sd.innerHTML='<p style="text-align:center; color:#9ca3af;">Vazio</p>';
+            else u.saved.forEach((l,i)=>{
+                const d=document.createElement('div'); d.className='card'; d.style.borderLeft='4px solid var(--primary)';
+                d.innerHTML=`<span class="link-text" title="${l}">${l}</span> <button class="danger btn-auto" onclick="apagarSalvo(${i})">X</button>`;
+                sd.appendChild(d);
+            });
+        }
+        function abrirZap(i) {
+            const l=db.users[currentUser].links[i];
+            window.open(l.includes('http')?l:`https://wa.me/55${l.replace(/\D/g,'')}`, '_blank');
+            tempLink=l; lastDeletedLink=l; db.users[currentUser].links.splice(i,1);
+            salvarDB(); atualizarListaLinks();
+            document.getElementById('undo-area').classList.remove('hidden'); document.getElementById('last-opened-url').innerText=l; document.getElementById('modal-save-link').classList.add('show');
+        }
+        function confirmarSalvar(s) { if(s&&tempLink){ db.users[currentUser].saved.push(tempLink); salvarDB(); atualizarListaLinks(); } document.getElementById('modal-save-link').classList.remove('show'); }
+        function desfazerAcao() {
+            if(lastDeletedLink){
+                db.users[currentUser].links.unshift(lastDeletedLink);
+                const i=db.users[currentUser].saved.indexOf(lastDeletedLink);
+                if(i>-1)db.users[currentUser].saved.splice(i,1);
+                lastDeletedLink=null; document.getElementById('undo-area').classList.add('hidden'); document.getElementById('modal-save-link').classList.remove('show'); salvarDB(); atualizarListaLinks();
+            }
+        }
+        function apagarSalvo(i){ if(confirm("Apagar?")){ db.users[currentUser].saved.splice(i,1); salvarDB(); atualizarListaLinks(); }}
+        function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
+    </script>
+</body>
+</html>
