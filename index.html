@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZapFlow | Gestão V35</title>
+    <title>ZapFlow | Gestão V36</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ESTILOS V35 */
+        /* ESTILOS V36 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -18,6 +18,7 @@
         input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; }
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
         
         button.secondary { background: #e5e7eb; color: var(--text); }
         button.danger { background: var(--danger); }
@@ -28,12 +29,13 @@
         button.sheet-btn { background: #107c10; color: white; margin-bottom: 10px; }
         
         .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
-        .btn-small { padding: 4px 8px; font-size: 12px; }
-        
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: #fff; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; }
         
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; color: var(--text); }
+
+        /* PAGINAÇÃO */
+        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
 
         .alert { background: #fff7ed; color: #9a3412; padding: 15px; border-radius: var(--radius); border: 1px solid #fdba74; margin-bottom: 20px; display: none; }
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
@@ -47,11 +49,7 @@
         .value-badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #86efac; margin-left: 5px; }
 
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 20px; background: #ecfdf5; position: relative; overflow: hidden; }
-        .pay-card::before { content: "PIX"; position: absolute; top: -10px; right: -10px; background: #10b981; color: white; padding: 20px 10px 5px 20px; font-weight: bold; border-radius: 0 0 0 30px; font-size: 12px; }
         .pay-key { font-family: monospace; font-size: 18px; background: white; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; color: #333; word-break: break-all; }
-        .pay-info { text-align: left; font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.6; }
-        .pay-steps { display: flex; gap: 10px; margin-top: 20px; }
-
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -106,6 +104,7 @@
 
             <h4 style="color: var(--primary);">Pendentes (<span id="count-pend">0</span>)</h4>
             <div id="lista-pendentes"></div>
+            <div id="paginacao-pend" class="pagination-ctrl"></div>
             
             <h4 style="color: var(--blue); margin-top: 30px;">Salvos (<span id="count-saved">0</span>)</h4>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -113,6 +112,7 @@
                 <button onclick="limparSalvos()" class="danger btn-auto">🗑️ Limpar</button>
             </div>
             <div id="lista-salvos"></div>
+            <div id="paginacao-salv" class="pagination-ctrl"></div>
         </div>
     </div>
 
@@ -171,16 +171,20 @@
     <script>
         // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
-        const DB_KEY = 'zapflow_v35';
+        const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session';
         
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let adminCache = [];
+        
+        // PAGINAÇÃO
+        let paginaAtualPend = 0;
+        let paginaAtualSalv = 0;
+        const ITENS_POR_PAGINA = 5;
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-        // --- TRATAMENTO DATA ---
         function parseDataBR(dataStr) {
             if (!dataStr) return new Date();
             let clean = dataStr.toString().replace(/['"]+/g, '').trim();
@@ -192,7 +196,6 @@
             return new Date(clean);
         }
 
-        // --- INICIALIZAÇÃO ---
         window.onload = function() {
             const sessao = localStorage.getItem(SESSION_KEY);
             if (sessao) {
@@ -209,12 +212,7 @@
             const uInput = document.getElementById('user').value.trim().toLowerCase();
             const pInput = document.getElementById('pass').value.trim();
             if(!uInput || !pInput) return;
-
-            if(!silencioso) { 
-                document.querySelector('#login-screen button').style.display = 'none'; 
-                document.getElementById('loading').style.display = 'block'; 
-            }
-
+            if(!silencioso) { document.querySelector('#login-screen button').style.display = 'none'; document.getElementById('loading').style.display = 'block'; }
             try {
                 const response = await fetch(PLANILHA_URL + '&cache=' + new Date().getTime());
                 const csvData = await response.text();
@@ -232,25 +230,16 @@
                         if (pu.toLowerCase() === uInput && pp === pInput) achou = { user: pu, validade: pd };
                     }
                 }
-
                 if (achou) {
                     const sessao = btoa(JSON.stringify({u: uInput, p: pInput}));
                     localStorage.setItem(SESSION_KEY, sessao);
                     validarAcesso(achou);
                 } else {
                     localStorage.removeItem(SESSION_KEY);
-                    if(!silencioso) {
-                        document.getElementById('msg-login').innerText = "Dados incorretos.";
-                        document.querySelector('#login-screen button').style.display = 'block'; 
-                        document.getElementById('loading').style.display = 'none';
-                    }
+                    if(!silencioso) { document.getElementById('msg-login').innerText = "Dados incorretos."; document.querySelector('#login-screen button').style.display = 'block'; document.getElementById('loading').style.display = 'none'; }
                 }
             } catch (err) {
-                if(!silencioso) {
-                    document.getElementById('msg-login').innerText = "Erro de conexão.";
-                    document.querySelector('#login-screen button').style.display = 'block'; 
-                    document.getElementById('loading').style.display = 'none';
-                }
+                if(!silencioso) { document.getElementById('msg-login').innerText = "Erro de conexão."; document.querySelector('#login-screen button').style.display = 'block'; document.getElementById('loading').style.display = 'none'; }
             }
         }
 
@@ -265,12 +254,7 @@
                 return;
             }
             currentUser = dados.user;
-            
-            // CORREÇÃO: VERIFICA SE O USUÁRIO JÁ EXISTE PARA NÃO APAGAR OS LINKS
-            if (!db[currentUser]) {
-                db[currentUser] = { links: [], salvos: [] };
-            }
-            
+            if (!db[currentUser]) db[currentUser] = { links: [], salvos: [] };
             salvarLocal(); entrarNoApp(dados.user, validade);
         }
 
@@ -375,18 +359,47 @@
         function abrirModalRenovar(){ document.getElementById('modal-renovar').classList.add('show');}
 
         function renderizar() {
-            const p=document.getElementById('lista-pendentes'), s=document.getElementById('lista-salvos');
-            p.innerHTML=''; s.innerHTML='';
+            const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
+            const pgP = document.getElementById('paginacao-pend'), pgS = document.getElementById('paginacao-salv');
+            p.innerHTML = ''; s.innerHTML = '';
+            
             if(!db[currentUser]) db[currentUser] = { links: [], salvos: [] };
-            document.getElementById('count-pend').innerText=db[currentUser].links.length;
-            document.getElementById('count-saved').innerText=db[currentUser].salvos.length;
-            db[currentUser].links.forEach((l,i)=>{
-                let url=l.includes('http')?l:`https://wa.me/55${l.replace(/\D/g,'')}`;
-                p.innerHTML+=`<div class="card"><span class="link-text">${l}</span><button onclick="window.open('${url}');db['${currentUser}'].salvos.push('${l}');db['${currentUser}'].links.splice(${i},1);salvarLocal();renderizar();" class="btn-auto">Abrir ↗</button></div>`;
+            
+            const totalPend = db[currentUser].links.length;
+            const totalSalv = db[currentUser].salvos.length;
+            document.getElementById('count-pend').innerText = totalPend;
+            document.getElementById('count-saved').innerText = totalSalv;
+
+            // RENDERIZAÇÃO PENDENTES COM PAGINAÇÃO
+            const inicioP = paginaAtualPend * ITENS_POR_PAGINA;
+            const fimP = inicioP + ITENS_POR_PAGINA;
+            db[currentUser].links.slice(inicioP, fimP).forEach((l, i) => {
+                const indexReal = inicioP + i;
+                let url = l.includes('http') ? l : `https://wa.me/55${l.replace(/\D/g,'')}`;
+                p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button onclick="window.open('${url}');db['${currentUser}'].salvos.push('${l}');db['${currentUser}'].links.splice(${indexReal},1);salvarLocal();renderizar();" class="btn-auto">Abrir ↗</button></div>`;
             });
-            db[currentUser].salvos.forEach((l,i)=>{
-                s.innerHTML+=`<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button onclick="db['${currentUser}'].salvos.splice(${i},1);salvarLocal();renderizar();" class="danger btn-auto">X</button></div>`;
+
+            // RENDERIZAÇÃO SALVOS COM PAGINAÇÃO
+            const inicioS = paginaAtualSalv * ITENS_POR_PAGINA;
+            const fimS = inicioS + ITENS_POR_PAGINA;
+            db[currentUser].salvos.slice(inicioS, fimS).forEach((l, i) => {
+                const indexReal = inicioS + i;
+                s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button onclick="db['${currentUser}'].salvos.splice(${indexReal},1);salvarLocal();renderizar();" class="danger btn-auto">X</button></div>`;
             });
+
+            // CONTROLES DE PAGINAÇÃO
+            renderControles(pgP, totalPend, paginaAtualPend, (nova) => { paginaAtualPend = nova; renderizar(); });
+            renderControles(pgS, totalSalv, paginaAtualSalv, (nova) => { paginaAtualSalv = nova; renderizar(); });
+        }
+
+        function renderControles(container, total, atual, callback) {
+            const maxPag = Math.ceil(total / ITENS_POR_PAGINA);
+            if (maxPag <= 1) { container.innerHTML = ''; return; }
+            container.innerHTML = `
+                <button class="secondary btn-auto" ${atual === 0 ? 'disabled' : ''} onclick="(${callback})(atual-1)">« Ant</button>
+                <span>${atual + 1} de ${maxPag}</span>
+                <button class="secondary btn-auto" ${atual >= maxPag - 1 ? 'disabled' : ''} onclick="(${callback})(atual+1)">Próx »</button>
+            `;
         }
     </script>
 </body>
