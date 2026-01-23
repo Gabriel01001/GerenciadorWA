@@ -62,6 +62,7 @@
             <button id="btn-login" onclick="conectarBanco()">Entrar</button>
             <div id="loading-login" class="loader"></div>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px;"></p>
+            <button onclick="window.open('https://wa.me/5521970458286?text=Olá, preciso de ajuda com o Gerenciador WA')" class="admin-btn" style="margin-top: 20px; background: transparent; color: #666; border: 1px solid #ddd;">💬 Suporte Técnico</button>
         </div>
 
         <div id="app-screen" class="hidden">
@@ -78,10 +79,7 @@
             <div class="header">
                 <div>
                     <h3 id="ola-user" style="margin:0">...</h3>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <small id="status-acesso" style="color: #666;"></small>
-                        <button onclick="abrirModalTrocaSenha()" class="secondary btn-auto" style="padding: 2px 8px; font-size: 10px;">🔑 Alterar Senha</button>
-                    </div>
+                    <small id="status-acesso" style="color: #666;"></small>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                     <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Painel Master</button>
@@ -137,17 +135,6 @@
         </div>
     </div>
 
-    <div id="modal-senha" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="fecharModal('modal-senha')">&times;</span>
-            <h3 style="text-align: center;">🔑 Trocar Minha Senha</h3>
-            <label>Nova Senha</label>
-            <input type="text" id="new-password" placeholder="Digite a nova senha">
-            <button onclick="gerarLinhaTrocaSenha()" class="admin-btn" style="width:100%">💾 Gerar Linha de Atualização</button>
-            <div id="senha-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin-top: 15px; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div>
-        </div>
-    </div>
-
     <div id="modal-admin" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span><h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2><button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button><div id="admin-users-list"></div></div></div>
     
     <div id="modal-edit-user" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span><h3>✏️ Editar Usuário</h3><label>Usuário</label><input type="text" id="edit-name"><label>Senha</label><input type="text" id="edit-pass"><div style="display: flex; gap: 10px;"><div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div><div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div></div><label>Validade</label><input type="date" id="edit-date"><button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button><div id="manual-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin-top: 15px; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div></div></div>
@@ -172,7 +159,6 @@
         };
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-        
         function formatarData(dataStr) {
             if(!dataStr) return new Date();
             let limpa = dataStr.replace(/['"]+/g, '').trim();
@@ -255,16 +241,6 @@
                 div.innerHTML = `<div class="user-head"><div class="user-info-text"><strong>${u.user}</strong><span class="creator-badge">Por: ${u.criador}</span><small style="color:#10b981">📱 ${u.wa}</small><small style="color:#166534">💰 R$ ${u.val}</small></div><div style="text-align: right;"><span style="font-size:12px; font-weight:bold; color:${cor};">${textoDias}</span></div></div><div class="user-actions"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
                 lista.appendChild(div);
             });
-        }
-
-        function abrirModalTrocaSenha() { document.getElementById('modal-senha').classList.add('show'); }
-        function gerarLinhaTrocaSenha() {
-            const nova = document.getElementById('new-password').value.trim();
-            if(!nova) return alert("Digite a nova senha!");
-            const csv = `${currentUser},${nova},${currentUserData.date},${currentUserData.wa},${currentUserData.val},${currentUserData.type},${currentUserData.criador}`;
-            const box = document.getElementById('senha-copy-box');
-            box.innerText = csv; box.style.display = 'block';
-            navigator.clipboard.writeText(csv).then(() => alert("Copiado! Envie para o suporte atualizar."));
         }
 
         function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
