@@ -210,8 +210,8 @@
                             date: (c[2]||"").replace(/['"]+/g, '').trim(), 
                             wa: (c[3]||"").replace(/['"]+/g, '').trim(),
                             val: (c[4]||"").replace(/['"]+/g, '').trim(),
-                            pix: (c[5]||"").replace(/['"]+/g, '').trim(), // Coluna F (índice 5)
-                            criador: (c[6]||"").replace(/['"]+/g, '').trim() // Coluna G (índice 6)
+                            Criador: (c[5]||"").replace(/['"]+/g, '').trim(), // Coluna F (índice 5)
+                            pix: (c[7]||"").replace(/['"]+/g, '').trim() // Coluna G (índice 7)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
@@ -307,3 +307,4 @@
     </script>
 </body>
 </html>
+
