@@ -71,7 +71,7 @@
                     <small id="status-acesso" style="color: #666;">...</small>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Admin</button>
+                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Painel Master</button>
                     <button onclick="logout()" class="danger btn-auto">Sair</button>
                 </div>
             </div>
@@ -86,7 +86,7 @@
                 <div id="save-prompt" class="save-prompt">
                     <div style="overflow: hidden; flex: 1;">
                         <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
-                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7;"></div>
+                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
                     </div>
                     <div style="display: flex; gap: 4px;">
                         <button onclick="confirmarSalvamento(true)" class="edit-btn btn-auto">Sim</button>
@@ -121,7 +121,9 @@
         let pgPend = 0, pgSalv = 0; const ITENS = 5;
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-        function parseDataBR(dataStr) { 
+        
+        function formatarData(dataStr) {
+            if(!dataStr) return new Date();
             let limpa = dataStr.replace(/['"]+/g, '').trim();
             if (limpa.includes('/')) {
                 const p = limpa.split('/');
@@ -148,7 +150,6 @@
                             user: (c[0]||"").replace(/['"]+/g,'').trim(), 
                             pass: (c[1]||"").replace(/['"]+/g,'').trim(), 
                             date: (c[2]||"").replace(/['"]+/g,'').trim(), 
-                            wa: (c[3]||"").replace(/['"]+/g,'').trim(),
                             type: (c[5]||"user").replace(/['"]+/g,'').trim(), // Coluna F
                             criador: (c[6]||"N/A").replace(/['"]+/g,'').trim() // Coluna G
                         };
@@ -180,7 +181,7 @@
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             adminCache.forEach((u) => {
                 if(u.user.toLowerCase() === 'admin') return;
-                const dataVenc = parseDataBR(u.date);
+                const dataVenc = formatarData(u.date);
                 const diffDays = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
                 const corVenc = diffDays <= 5 ? "#ef4444" : "#3b82f6";
                 const div = document.createElement('div');
@@ -199,12 +200,25 @@
             });
         }
 
-        // --- Funções Auxiliares ---
+        function tratarAberturaLink(idx, link) {
+            lastOpenedLink = link;
+            window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`);
+            db[currentUser].links.splice(idx, 1); salvarLocal();
+            document.getElementById('last-link-opened').innerText = link;
+            document.getElementById('save-prompt').style.display = 'flex';
+            renderizar();
+        }
+
+        function confirmarSalvamento(sim) {
+            if(sim && lastOpenedLink) { db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); }
+            document.getElementById('save-prompt').style.display = 'none';
+            lastOpenedLink = ""; renderizar();
+        }
+
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout() { location.reload(); }
         function addLinks() { const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())}); t.value=''; salvarLocal(); renderizar(); }
-        function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUser].links.splice(idx, 1); salvarLocal(); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
+        
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
             p.innerHTML = ''; s.innerHTML = '';
@@ -218,6 +232,7 @@
             });
             renderControles(document.getElementById('paginacao-pend'), tP, pgPend, (n)=> {pgPend=n; renderizar();});
         }
+
         function renderControles(div, total, atual, cb) {
             const max = Math.ceil(total/ITENS);
             div.innerHTML = max <= 1 ? '' : `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`;
