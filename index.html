@@ -130,13 +130,11 @@
                     🏛️ <strong>Utilize a chave acima</strong>
                 </div>
             </div>
-            <button onclick="copiarPix()" class="chat-btn" style="border-radius: 50px; margin-bottom: 10px; width:100%">📋 Copiar Chave PIX</button>
-            <button onclick="window.open('https://wa.me/5521970458286?text=Enviei o comprovante de renovação')" class="secondary" style="width:100%">📤 Enviar Comprovante</button>
+            <button id="btn-copy-pix" onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
         </div>
     </div>
 
     <div id="modal-admin" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span><h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2><button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button><div id="admin-users-list" style="margin-top: 15px;"></div></div></div>
-    
     <div id="modal-edit-user" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span><h3>✏️ Editar Usuário</h3><label>Usuário</label><input type="text" id="edit-name"><label>Senha</label><input type="text" id="edit-pass"><div style="display: flex; gap: 10px;"><div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div><div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div></div><label>Validade</label><input type="date" id="edit-date"><button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button><div id="manual-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin-top: 15px; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div></div></div>
 
     <script>
@@ -192,7 +190,7 @@
                             wa: (c[3]||"").replace(/['"]+/g, '').trim(),
                             val: (c[4]||"").replace(/['"]+/g, '').trim(),
                             type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase(),
-                            pix: (c[6]||"").replace(/['"]+/g, '').trim() // COLUNA G É O PIX
+                            pix: (c[6]||"").replace(/['"]+/g, '').trim() 
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
@@ -227,15 +225,34 @@
         }
 
         function abrirModalRenovar() { 
-            // AQUI É ONDE INJETAMOS A CHAVE PIX DA COLUNA G NO POP-UP
             document.getElementById('pix-display').innerText = currentUserData.pix || "Chave não cadastrada";
             document.getElementById('modal-renovar').classList.add('show'); 
         }
 
-        function copiarPix() { 
-            const pix = document.getElementById('pix-display').innerText;
-            if(pix === "Chave não cadastrada") return alert("Erro: Chave não encontrada.");
-            navigator.clipboard.writeText(pix).then(() => alert("Chave PIX Copiada!")); 
+        // FUNCAO DE COPIAR REFEITA PARA ALTA COMPATIBILIDADE
+        function copiarPixReal() {
+            const texto = document.getElementById('pix-display').innerText;
+            if(texto === "..." || texto === "Chave não cadastrada") return;
+
+            const tempInput = document.createElement("input");
+            tempInput.value = texto;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); // Para mobile
+
+            try {
+                document.execCommand("copy");
+                const btn = document.getElementById('btn-copy-pix');
+                btn.innerText = "✅ Chave Copiada!";
+                btn.style.background = "#3b82f6";
+                setTimeout(() => {
+                    btn.innerText = "📋 Copiar Chave PIX";
+                    btn.style.background = "var(--primary)";
+                }, 2000);
+            } catch (err) {
+                alert("Erro ao copiar. Tente selecionar o texto manualmente.");
+            }
+            document.body.removeChild(tempInput);
         }
 
         function abrirAdminPanel() {
