@@ -33,6 +33,7 @@
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .theme-toggle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; padding: 0; background: var(--card); color: var(--text); border: 1px solid #ddd; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; }
+        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -85,6 +86,7 @@
             </div>
             <h4 style="color: var(--primary);">Pendentes (<span id="count-pend">0</span>)</h4>
             <div id="lista-pendentes"></div>
+            <div id="paginacao-pend" class="pagination-ctrl"></div>
         </div>
     </div>
 
@@ -115,6 +117,7 @@
         const SESSION_KEY = 'zapflow_session_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUserData = null, lastOpenedLink = "", adminCache = [];
+        let pgPend = 0; const ITENS_POR_PAGINA = 5;
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
@@ -135,6 +138,7 @@
         async function conectarBanco() {
             const uI = document.getElementById('user').value.trim().toLowerCase();
             const pI = document.getElementById('pass').value.trim();
+            const msg = document.getElementById('msg-login'), btn = document.querySelector('#login-screen button');
             try {
                 const res = await fetch(PLANILHA_URL + '&cache=' + Date.now());
                 const csv = await res.text();
@@ -144,13 +148,10 @@
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
                         const uO = { 
-                            user: c[0].replace(/['"]+/g,'').trim(), 
-                            pass: c[1].replace(/['"]+/g,'').trim(), 
-                            date: c[2].replace(/['"]+/g,'').trim(), 
-                            wa: c[3].replace(/['"]+/g,'').trim(), 
-                            val: c[4].replace(/['"]+/g,'').trim(), 
-                            pix: c[5].replace(/['"]+/g,'').trim(), // Coluna F
-                            criador: c[6].replace(/['"]+/g,'').trim() // Coluna G
+                            user: c[0].replace(/['"]+/g,'').trim(), pass: c[1].replace(/['"]+/g,'').trim(), 
+                            date: c[2].replace(/['"]+/g,'').trim(), wa: c[3].replace(/['"]+/g,'').trim(), 
+                            val: c[4].replace(/['"]+/g,'').trim(), pix: c[5].replace(/['"]+/g,'').trim(), 
+                            criador: c[6].replace(/['"]+/g,'').trim() 
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
@@ -175,15 +176,56 @@
                     if(currentUserData.user.toLowerCase() === 'admin' || currentUserData.pix.toLowerCase() === 'master') 
                         document.getElementById('btn-open-admin').classList.remove('hidden');
                     renderizar();
-                }
-            } catch(e) { console.error(e); }
+                } else { msg.innerText = "Dados incorretos."; localStorage.removeItem(SESSION_KEY); }
+            } catch(e) { msg.innerText = "Erro de conexão."; }
         }
 
-        function filtrarUsuarios() {
-            const termo = document.getElementById('search-user').value.toLowerCase();
-            document.querySelectorAll('.user-row').forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
+        function renderizar() {
+            const p = document.getElementById('lista-pendentes'); p.innerHTML = '';
+            const u = currentUserData.user; if(!db[u]) db[u] = {links:[]};
+            const totalLinks = db[u].links.length;
+            document.getElementById('count-pend').innerText = totalLinks;
+
+            // PAGINAÇÃO: MOSTRA APENAS 5 LINKS
+            const inicio = pgPend * ITENS_POR_PAGINA;
+            const fim = inicio + ITENS_POR_PAGINA;
+            const linksPagina = db[u].links.slice(inicio, fim);
+
+            linksPagina.forEach((l, i) => {
+                const realIdx = inicio + i;
+                p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${realIdx},'${l}')">Abrir ↗</button></div>`;
             });
+
+            renderizarControlesPaginacao(totalLinks);
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+        }
+
+        function renderizarControlesPaginacao(total) {
+            const div = document.getElementById('paginacao-pend');
+            const totalPaginas = Math.ceil(total / ITENS_POR_PAGINA);
+            if (totalPaginas <= 1) { div.innerHTML = ''; return; }
+
+            div.innerHTML = `
+                <button class="secondary btn-auto" ${pgPend === 0 ? 'disabled' : ''} onclick="mudarPagina(${pgPend - 1})">« Ant</button>
+                <span>${pgPend + 1} / ${totalPaginas}</span>
+                <button class="secondary btn-auto" ${pgPend >= totalPaginas - 1 ? 'disabled' : ''} onclick="mudarPagina(${pgPend + 1})">Próx »</button>
+            `;
+        }
+
+        function mudarPagina(n) { pgPend = n; renderizar(); }
+
+        function tratarAberturaLink(idx, link) {
+            lastOpenedLink = link;
+            window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`);
+            db[currentUserData.user].links.splice(idx, 1);
+            document.getElementById('last-link-opened').innerText = link;
+            document.getElementById('save-prompt').style.display = 'flex';
+            
+            // AJUSTE DE PÁGINA CASO A PÁGINA ATUAL FIQUE VAZIA
+            const totalRestante = db[currentUserData.user].links.length;
+            if (pgPend > 0 && pgPend * ITENS_POR_PAGINA >= totalRestante) pgPend--;
+            
+            renderizar();
         }
 
         function abrirAdminPanel() {
@@ -218,24 +260,20 @@
             });
         }
 
+        function filtrarUsuarios() {
+            const termo = document.getElementById('search-user').value.toLowerCase();
+            document.querySelectorAll('.user-row').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
+            });
+        }
+
         function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
-        
         function copiarPixReal() {
             const texto = document.getElementById('pix-display').innerText;
             const tempInput = document.createElement("input"); tempInput.value = texto; document.body.appendChild(tempInput);
             tempInput.select(); tempInput.setSelectionRange(0, 99999); document.execCommand("copy"); document.body.removeChild(tempInput);
             alert("Chave PIX Copiada!");
         }
-
-        function tratarAberturaLink(idx, link) {
-            lastOpenedLink = link;
-            window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`);
-            db[currentUserData.user].links.splice(idx, 1);
-            document.getElementById('last-link-opened').innerText = link;
-            document.getElementById('save-prompt').style.display = 'flex';
-            renderizar();
-        }
-
         function confirmarSalvamento(sim) {
             if(sim && lastOpenedLink) { 
                 if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos = [];
@@ -243,22 +281,10 @@
             }
             document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar();
         }
-
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
-        function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; renderizar(); }
-        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())});renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        
-        function renderizar(){
-            const p = document.getElementById('lista-pendentes'); p.innerHTML = '';
-            const u = currentUserData.user; if(!db[u]) db[u] = {links:[]};
-            document.getElementById('count-pend').innerText = db[u].links.length;
-            db[u].links.forEach((l,i) => {
-                p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${i},'${l}')">Abrir ↗</button></div>`;
-            });
-            localStorage.setItem(DB_KEY, JSON.stringify(db));
-        }
-
+        function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
+        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); pgPend = 0; renderizar();}; r.readAsText(i.files[0]); i.value=''; }
         function enviarDadosWhatsApp(idx) {
             const u = adminCache[idx];
             const msg = `🔐 *Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}`;
