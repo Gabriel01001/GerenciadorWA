@@ -40,8 +40,7 @@
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #f9fafb; }
         .user-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         .user-info-text { display: flex; flex-direction: column; gap: 2px; }
-        .copy-box { background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 10px 0; font-size: 11px; border: 1px dashed #6366f1; display: none; }
-        
+        .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; gap: 5px; flex-wrap: wrap; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
         
@@ -120,7 +119,7 @@
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
             <h2 id="admin-title" style="color: var(--dark); margin:0 0 15px 0;">⚙️ Gestão</h2>
-            <button id="btn-sheet" onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto hidden" style="background: #107c10; margin-bottom: 15px;">📂 Planilha Master</button>
+            <button id="btn-sheet" onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto hidden" style="background: #107c10; margin-bottom: 15px; width: 100%;">📂 Planilha Master</button>
             <div id="admin-users-list"></div>
         </div>
     </div>
@@ -128,7 +127,7 @@
     <div id="modal-edit-user" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
-            <h3 id="edit-modal-title">✏️ Gestão de Usuário</h3>
+            <h3>✏️ Editar Usuário</h3>
             <label>Tipo de Conta</label>
             <select id="edit-type">
                 <option value="user">Usuário Comum</option>
@@ -155,11 +154,23 @@
         let pgPend = 0, pgSalv = 0; const ITENS = 5;
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-        function parseDataBR(dataStr) { const partes = dataStr.split('/'); return partes.length === 3 ? new Date(partes[2], partes[1] - 1, partes[0]) : new Date(dataStr); }
+        
+        // Função aprimorada para lidar com diferentes formatos de data e erros de escrita
+        function formatarData(dataStr) {
+            if(!dataStr) return new Date();
+            let limpa = dataStr.replace(/['"]+/g, '').trim();
+            // Formato BR: DD/MM/AAAA
+            if (limpa.includes('/')) {
+                const p = limpa.split('/');
+                return new Date(p[2], p[1] - 1, p[0]);
+            }
+            // Formato ISO/US: AAAA-MM-DD
+            return new Date(limpa);
+        }
 
         async function conectarBanco() {
-            const uInput = document.getElementById('user').value.trim().toLowerCase();
-            const pInput = document.getElementById('pass').value.trim();
+            const uI = document.getElementById('user').value.trim().toLowerCase();
+            const pI = document.getElementById('pass').value.trim();
             const msg = document.getElementById('msg-login'), btn = document.getElementById('btn-login'), loader = document.getElementById('loading-login');
             
             msg.innerText = ""; btn.style.display = "none"; loader.style.display = "block";
@@ -174,16 +185,16 @@
                     const c = linhas[i].split(',');
                     if(c.length >= 3){
                         const uO = { 
-                            user: (c[0]||"").replace(/"/g,'').trim(), 
-                            pass: (c[1]||"").replace(/"/g,'').trim(), 
-                            date: (c[2]||"").replace(/"/g,'').trim(), 
-                            wa: (c[3]||"").replace(/"/g,'').trim(), 
-                            val: (c[4]||"").replace(/"/g,'').trim(),
-                            type: (c[5]||"user").replace(/"/g,'').trim(),
-                            criador: (c[6]||"admin").replace(/"/g,'').trim()
+                            user: (c[0]||"").replace(/['"]+/g, '').trim(), 
+                            pass: (c[1]||"").replace(/['"]+/g, '').trim(), 
+                            date: (c[2]||"").replace(/['"]+/g, '').trim(), 
+                            wa: (c[3]||"").replace(/['"]+/g, '').trim(), 
+                            val: (c[4]||"").replace(/['"]+/g, '').trim(),
+                            type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase(), // IGNORA CASE E ESPAÇOS
+                            criador: (c[6]||"admin").replace(/['"]+/g, '').trim().toLowerCase()
                         };
                         if(uO.user) adminCache.push(uO);
-                        if(uO.user.toLowerCase() === uInput && uO.pass === pInput) achou = uO;
+                        if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
                     }
                 }
 
@@ -195,9 +206,11 @@
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     document.getElementById('ola-user').innerText = "Olá, " + currentUser;
-                    document.getElementById('status-acesso').innerText = "Vence: " + achou.date;
                     
-                    // REQUISITO: O painel só aparece se o tipo for 'master' ou 'revenda'
+                    const vDate = formatarData(achou.date);
+                    document.getElementById('status-acesso').innerText = "Vence: " + vDate.toLocaleDateString('pt-BR');
+                    
+                    // RECONHECIMENTO DE PERMISSÃO (Master ou Revenda)
                     if(achou.type === 'master' || achou.type === 'revenda') {
                         document.getElementById('btn-open-admin').classList.remove('hidden');
                         if(achou.type === 'master') document.getElementById('btn-sheet').classList.remove('hidden');
@@ -214,11 +227,10 @@
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             
             adminCache.forEach((u, idx) => {
-                // Filtro Hierárquico
-                if(currentUserData.type === 'revenda' && u.criador !== currentUser) return;
-                if(u.user.toLowerCase() === 'admin' || u.user === currentUser) return;
+                if(currentUserData.type === 'revenda' && u.criador !== currentUser.toLowerCase()) return;
+                if(u.user.toLowerCase() === 'admin' || u.user.toLowerCase() === currentUser.toLowerCase()) return;
 
-                const dataVenc = parseDataBR(u.date); dataVenc.setHours(0,0,0,0);
+                const dataVenc = formatarData(u.date); dataVenc.setHours(0,0,0,0);
                 const diffDays = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
                 const corVenc = diffDays <= 5 ? "#ef4444" : "#3b82f6";
                 
@@ -231,7 +243,7 @@
                             ${u.type === 'revenda' ? '<span class="revenda-badge">REVENDEDOR</span>' : ''}
                             ${currentUserData.type === 'master' ? `<small>Por: ${u.criador}</small>` : ''}
                         </div>
-                        <div style="text-align: right;"><span style="color:${corVenc}; font-weight:bold;">${u.date}</span></div>
+                        <div style="text-align: right;"><span style="color:${corVenc}; font-weight:bold;">${dataVenc.toLocaleDateString('pt-BR')}</span></div>
                     </div>
                     <div class="user-actions"><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
                 lista.appendChild(div);
@@ -245,14 +257,14 @@
             document.getElementById('edit-wa').value = u.wa;
             document.getElementById('edit-val').value = u.val;
             document.getElementById('edit-type').value = u.type;
-            const p = u.date.split('/');
-            if(p.length === 3) document.getElementById('edit-date').value = `${p[2]}-${p[1]}-${p[0]}`;
+            const d = formatarData(u.date);
+            document.getElementById('edit-date').value = d.toISOString().split('T')[0];
             fecharModal('modal-admin');
             document.getElementById('modal-edit-user').classList.add('show');
         }
 
         function copiarLinhaPlanilha() {
-            const csv = `${document.getElementById('edit-name').value},${document.getElementById('edit-pass').value},${document.getElementById('edit-date').value.split('-').reverse().join('/')},${document.getElementById('edit-wa').value},${document.getElementById('edit-val').value},${document.getElementById('edit-type').value},${currentUser}`;
+            const csv = `${document.getElementById('edit-name').value},${document.getElementById('edit-pass').value},${document.getElementById('edit-date').value.split('-').reverse().join('/')},${document.getElementById('edit-wa').value},${document.getElementById('edit-val').value},${document.getElementById('edit-type').value},${currentUser.toLowerCase()}`;
             const box = document.getElementById('manual-copy-box');
             box.innerText = csv; box.style.display = 'block';
             navigator.clipboard.writeText(csv).then(() => alert("Copiado!"));
@@ -261,10 +273,10 @@
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout() { location.reload(); }
         function addLinks() { const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())}); t.value=''; salvarLocal(); renderizar(); }
-        function limparPendentes() { db[currentUser].links = []; salvarLocal(); renderizar(); }
-        function limparSalvos(){ db[currentUser].salvos=[]; salvarLocal(); renderizar(); }
+        function limparPendentes() { if(confirm("Limpar?")){ db[currentUser].links = []; salvarLocal(); renderizar(); } }
+        function limparSalvos(){ if(confirm("Limpar?")){ db[currentUser].salvos=[]; salvarLocal(); renderizar(); } }
         function baixarSalvos() { const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([db[currentUser].salvos.join('\n')],{type:"text/plain"})); a.download="salvos.txt"; a.click(); }
-
+        
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
             p.innerHTML = ''; s.innerHTML = '';
