@@ -32,7 +32,7 @@
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .theme-toggle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; padding: 0; background: var(--card); color: var(--text); border: 1px solid #ddd; z-index: 10; }
-        .save-prompt { background: #eff6ff; color: #1e40af; padding: 12px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; }
+        .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
     </style>
 </head>
@@ -46,7 +46,7 @@
             <h2 style="font-weight: 700;">Gerenciador <span>|WA|</span></h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button onclick="conectarBanco()">Acessar Sistema</button>
+            <button onclick="conectarBanco()">Entrar</button>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px;"></p>
             <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
         </div>
@@ -75,7 +75,6 @@
                     <button onclick="document.getElementById('file').click()" class="secondary">📂 Arquivo</button>
                     <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
                 </div>
-
                 <div id="save-prompt" class="save-prompt">
                     <div style="overflow: hidden; flex: 1;">
                         <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
@@ -122,7 +121,7 @@
                 <div style="font-size: 11px; font-weight: bold;">CHAVE PIX PARA PAGAMENTO</div>
                 <div class="pay-key" id="pix-display">...</div>
             </div>
-            <button id="btn-copy-pix" onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
+            <button onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
         </div>
     </div>
 
@@ -214,10 +213,16 @@
                     </div>
                     <div style="margin-top:10px; display:flex; gap:5px;">
                         <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button>
-                        <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button>
+                        <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Enviar Dados</button>
                     </div>`;
                 lista.appendChild(div);
             });
+        }
+
+        function enviarDadosWhatsApp(idx) {
+            const u = adminCache[idx];
+            const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💠 *PIX:* ${u.pix}\n💰 *Valor:* ${u.val}\n\n*Suporte:* wa.me/5521970458286`;
+            window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
         }
 
         function filtrarUsuarios() {
@@ -235,20 +240,19 @@
         function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
         function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) db[currentUserData.user].salvos.push(lastOpenedLink); document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
+        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos'), u = currentUserData.user;
             p.innerHTML = ''; s.innerHTML = '';
-            const tP = db[u].links.length, tS = db[u].salvos.length;
+            const tP = db[u].links.length, tS = db[u].salvos ? db[u].salvos.length : 0;
             document.getElementById('count-pend').innerText = tP; document.getElementById('count-saved').innerText = tS;
             db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; });
-            db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; });
+            if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; });
             renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();});
             renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();});
             localStorage.setItem(DB_KEY, JSON.stringify(db));
         }
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
-        function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Acesso Gerenciador |WA|*\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}\n💠 *PIX:* ${u.pix}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
     </script>
 </body>
 </html>
