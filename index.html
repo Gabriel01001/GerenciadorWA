@@ -179,7 +179,7 @@
                             wa: c[3].replace(/['"]+/g,'').trim(),   // Coluna D
                             val: c[4].replace(/['"]+/g,'').trim(),  // Coluna E
                             criador: c[5].replace(/['"]+/g,'').trim(),  // Coluna G (CRIADOR)
-                            pix: c[6].replace(/['"]+/g,'').trim() // Coluna G (Pix)
+                            pix: c[7].replace(/['"]+/g,'').trim() // Coluna G (Pix)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
@@ -260,3 +260,4 @@
     </script>
 </body>
 </html>
+
