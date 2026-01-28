@@ -101,6 +101,8 @@
             <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
             <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                 <button onclick="baixarSalvos()" class="secondary btn-auto">📥 Extrair</button>
+                <button onclick="document.getElementById('file-saved').click()" class="secondary btn-auto">📂 Arquivo</button>
+                <input type="file" id="file-saved" accept=".txt" hidden onchange="lerArquivoSalvos(this)">
                 <button onclick="limparSalvos()" class="danger btn-auto">🗑️ Limpar</button>
             </div>
             <div id="lista-salvos"></div>
@@ -184,8 +186,8 @@
                             pass: (c[1]||"").replace(/['"]+/g, '').trim(),    // Coluna B (Senha)
                             date: (c[2]||"").replace(/['"]+/g, '').trim(),    // Coluna C (Validade)
                             wa: (c[3]||"").replace(/['"]+/g, '').trim(),      // Coluna D (WhatsApp)
-                            val: (c[4]||"").replace(/['"]+/g, '').trim(),     // Coluna E (Valor)
-                            pix: (c[7]||"").replace(/['"]+/g, '').trim(),     // Coluna F (CPF/PIX)
+                            val: (c[4]||"").replace(/['"]+/g, '').trim(),      // Coluna E (Valor)
+                            pix: (c[7]||"").replace(/['"]+/g, '').trim(),      // Coluna F (CPF/PIX)
                             criador: (c[6]||"").replace(/['"]+/g, '').trim()  // Coluna G (Nome do Criador)
                         };
                         adminCache.push(uO);
@@ -256,7 +258,12 @@
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
         function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
+        
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        
+        // NOVA FUNÇÃO PARA LER ARQUIVO DIRETO NOS SALVOS
+        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].salvos.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        
         function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
         function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
