@@ -343,7 +343,6 @@
 
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- VERIFICA ARQUIVO ---
                     if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
@@ -363,6 +362,53 @@
                 txt.style.display = 'block';
                 loader.style.display = 'none';
             }
+        }
+
+        // --- NOVA FUNÇÃO ANTI-DUPLICIDADE ---
+        function processarNovosLinks(listaBruta) {
+            const u = currentUserData.user;
+            if (!db[u]) db[u] = { links: [], salvos: [] };
+            if (!db[u].salvos) db[u].salvos = []; 
+
+            // Cria conjunto com tudo que ja existe (Pendentes + Salvos)
+            const jaExistem = new Set([...db[u].links, ...db[u].salvos]);
+
+            let adicionados = 0;
+            let duplicados = 0;
+
+            listaBruta.forEach(link => {
+                const l = link.trim();
+                if (l) {
+                    if (jaExistem.has(l)) {
+                        duplicados++;
+                    } else {
+                        db[u].links.push(l);
+                        jaExistem.add(l); // Adiciona ao set para evitar duplicata no mesmo lote
+                        adicionados++;
+                    }
+                }
+            });
+
+            if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`);
+            renderizar();
+        }
+
+        function addLinks(){ 
+            const t=document.getElementById('links-input'); 
+            const linhas = t.value.split('\n');
+            processarNovosLinks(linhas);
+            t.value=''; 
+            pgPend = 0; 
+        }
+        
+        function lerArquivo(i) { 
+            const r=new FileReader(); 
+            r.onload=(e)=>{
+                const linhas = e.target.result.split('\n');
+                processarNovosLinks(linhas);
+            }; 
+            r.readAsText(i.files[0]); 
+            i.value=''; 
         }
 
         function renderizar() {
@@ -697,11 +743,10 @@
         function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
-        function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
         
-        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].salvos.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        
+        // CORREÇÃO AQUI: Função lerArquivoSalvos foi adicionada para corrigir erro de referência
+        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+
         function tratarAberturaLink(idx, link) { 
             lastOpenedLink = link; 
             if(link.includes('http')) {
