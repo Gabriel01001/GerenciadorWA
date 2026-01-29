@@ -99,7 +99,7 @@
                 </div>
             </div>
 
-            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; justify-content: space-between;">
+            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: none !important; align-items: center; gap: 10px; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Auto (seg):</span>
                     <input type="number" id="auto-time" value="5" style="width: 50px; padding: 6px; margin: 0; text-align: center;" min="1">
@@ -184,7 +184,6 @@
         // Função de data otimizada
         function formatarData(d) {
             if(!d) return new Date();
-            // Se já vier formatado do servidor (DD/MM/AAAA)
             let l = String(d).trim();
             if(l.includes('/')) { const p = l.split('/'); return new Date(p[2], p[1]-1, p[0]); }
             return new Date(l);
@@ -279,7 +278,6 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
-        // --- FUNÇÃO DE ADMIN CORRIGIDA E RESTAURADA ---
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
