@@ -29,12 +29,17 @@
         .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:550px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
+        
+        /* ESTILOS ORIGINAIS DO ADMIN */
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-size: 12px; }
+        .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -47,7 +52,10 @@
             <h2 style="font-weight: 700;">Gerenciador <span>|WA|</span></h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button onclick="conectarBanco()">Entrar</button>
+            <button onclick="conectarBanco()" id="btn-login">
+                <span id="txt-login">Entrar</span>
+                <div class="loader" id="loader-login"></div>
+            </button>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px; font-weight: 600;"></p>
             <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
         </div>
@@ -91,7 +99,7 @@
                 </div>
             </div>
 
-            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; justify-content: space-between;">
+            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: none !important; align-items: center; gap: 10px; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Auto (seg):</span>
                     <input type="number" id="auto-time" value="5" style="width: 50px; padding: 6px; margin: 0; text-align: center;" min="1">
@@ -124,7 +132,7 @@
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-admin')">&times;</span>
             <h2 style="color: var(--dark); font-size: 18px;">⚙️ Gestão Master</h2>
             <input type="text" id="search-user" placeholder="🔍 Pesquisar..." onkeyup="filtrarUsuarios()">
-            <div id="admin-users-list" style="margin-top:10px;"></div>
+            <div id="admin-users-list" style="margin-top:10px;">Carregando...</div>
         </div>
     </div>
 
@@ -141,14 +149,16 @@
     </div>
 
     <script>
-        const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
+        // === URL DA SUA API ===
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzPZF_g41r5zs4rzO9qj4S8iBhwGk7pVEkhrH9pLgVSoZOd5GpWkJH8eNiQ6YodJ10dbg/exec';
+
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        let currentUserData = null, lastOpenedLink = "", adminCache = [];
+        let currentUserData = null, lastOpenedLink = "";
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
         let autoTimer = null;
-        let countdownRef = null; // VARIAVEL PARA O CONTADOR VISUAL
+        let countdownRef = null;
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') {
@@ -171,97 +181,174 @@
             document.querySelector('.theme-toggle').innerText = isDark ? '☀️' : '🌙';
         }
 
+        // Função de data otimizada
         function formatarData(d) {
             if(!d) return new Date();
-            let l = d.replace(/['"]+/g, '').trim();
+            let l = String(d).trim();
             if(l.includes('/')) { const p = l.split('/'); return new Date(p[2], p[1]-1, p[0]); }
             return new Date(l);
         }
 
         async function conectarBanco() {
-            const uI = document.getElementById('user').value.trim().toLowerCase();
+            const uI = document.getElementById('user').value.trim();
             const pI = document.getElementById('pass').value.trim();
             const msg = document.getElementById('msg-login');
+            const btn = document.getElementById('btn-login');
+            const txt = document.getElementById('txt-login');
+            const loader = document.getElementById('loader-login');
+
+            if(!uI || !pI) return msg.innerText = "Preencha todos os campos.";
+
+            btn.disabled = true;
+            txt.style.display = 'none';
+            loader.style.display = 'block';
+            msg.innerText = "";
+
             try {
-                const res = await fetch(PLANILHA_URL + '&cache=' + Date.now());
-                const csv = await res.text();
-                const linhas = csv.split(/\r?\n/);
-                adminCache = [];
-                let localAchou = null;
-                for (let i = 1; i < linhas.length; i++) {
-                    const c = linhas[i].split(',');
-                    if(c.length >= 7){
-                        const uO = { 
-                            user: (c[0]||"").replace(/['"]+/g, '').trim(),
-                            pass: (c[1]||"").replace(/['"]+/g, '').trim(),
-                            date: (c[2]||"").replace(/['"]+/g, '').trim(),
-                            wa: (c[3]||"").replace(/['"]+/g, '').trim(),
-                            val: (c[4]||"").replace(/['"]+/g, '').trim(),
-                            pix: (c[7]||"").replace(/['"]+/g, '').trim(),
-                            criador: (c[6]||"").replace(/['"]+/g, '').trim()
-                        };
-                        adminCache.push(uO);
-                        if(uO.user.toLowerCase() === uI && uO.pass === pI) localAchou = uO;
-                    }
-                }
-                
-                if(localAchou){
-                    const dV = formatarData(localAchou.date); dV.setHours(0,0,0,0);
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', user: uI, pass: pI })
+                });
+                const res = await req.json();
+
+                if (res.success) {
+                    const dados = res.data;
+                    const dV = formatarData(dados.date); dV.setHours(0,0,0,0);
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     const diff = Math.ceil((dV - hoje) / 86400000);
 
-                    if(diff < 0 && localAchou.user.toLowerCase() !== 'admin') {
-                        msg.innerText = "Seu acesso expirou. Entre em contato com o suporte.";
+                    if(diff < 0 && !dados.isMaster) {
+                        msg.innerText = "Acesso expirado.";
                         localStorage.removeItem(SESSION_KEY);
+                        btn.disabled = false; txt.style.display = 'block'; loader.style.display = 'none';
                         return;
                     }
 
-                    currentUserData = localAchou;
+                    currentUserData = dados;
+                    currentUserData.pass = pI; 
+                    
                     localStorage.setItem(SESSION_KEY, JSON.stringify({user: uI, pass: pI}));
-                    if(!db[currentUserData.user]) db[currentUserData.user] = {links:[], salvos:[]};
+                    
+                    if(!db[uI]) db[uI] = {links:[], salvos:[]};
+                    
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
+                    
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
-                    if(diff <= 5 && currentUserData.user.toLowerCase() !== 'admin') {
+                    
+                    if(diff <= 5 && !dados.isMaster) {
                         document.getElementById('vencimento-alert').style.display = 'block';
-                        document.getElementById('dias-restantes-alerta').innerText = diff;
+                        document.getElementById('dias-restantes-alerta').innerText = diff < 0 ? 0 : diff;
                     }
-                    if(currentUserData.user.toLowerCase() === 'admin' || currentUserData.pix.toLowerCase() === 'master') document.getElementById('btn-open-admin').classList.remove('hidden');
+
+                    if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
+                    
                     renderizar();
-                } else { msg.innerText = "Dados incorretos."; localStorage.removeItem(SESSION_KEY); }
-            } catch(e) { msg.innerText = "Erro ao conectar."; }
+                } else {
+                    msg.innerText = res.msg || "Dados incorretos.";
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            } catch(e) {
+                console.error(e);
+                msg.innerText = "Erro ao conectar. Verifique internet.";
+            } finally {
+                btn.disabled = false;
+                txt.style.display = 'block';
+                loader.style.display = 'none';
+            }
         }
 
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos'), u = currentUserData.user;
             p.innerHTML = ''; s.innerHTML = '';
+            
+            if(!db[u]) db[u] = {links:[], salvos:[]}; 
+            
             const tP = db[u].links.length, tS = db[u].salvos ? db[u].salvos.length : 0;
             document.getElementById('count-pend').innerText = tP; document.getElementById('count-saved').innerText = tS;
+            
             db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; });
             if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; });
+            
             renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();});
             renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();});
             localStorage.setItem(DB_KEY, JSON.stringify(db));
         }
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
-        function abrirAdminPanel() {
+        
+        async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
-            const lista = document.getElementById('admin-users-list'); lista.innerHTML = '';
-            const hoje = new Date(); hoje.setHours(0,0,0,0);
-            adminCache.forEach((u, idx) => {
-                if(u.user.toLowerCase() === 'admin' || u.user === currentUserData.user) return;
-                const dV = formatarData(u.date); dV.setHours(0,0,0,0);
-                const diff = Math.ceil((dV - hoje) / 86400000), cor = diff <= 5 ? "#ef4444" : "#3b82f6";
-                const div = document.createElement('div'); div.className = 'user-row';
-                div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items: flex-start;"><div style="max-width: 65%;"><strong style="font-size:14px;">${u.user}</strong><br><span class="creator-badge">Criador: ${u.criador}</span><br><span class="pix-badge">PIX: ${u.pix}</span><br><small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small></div><div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">${diff < 0 ? 'Expirado' : diff + ' dias'}</div></div><div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button></div>`;
-                lista.appendChild(div);
-            });
+            const lista = document.getElementById('admin-users-list');
+            lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>';
+
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'admin_list', 
+                        user: currentUserData.user, 
+                        pass: currentUserData.pass 
+                    })
+                });
+                const res = await req.json();
+
+                if(res.success && Array.isArray(res.list)) {
+                    lista.innerHTML = '';
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    
+                    if(res.list.length === 0) {
+                        lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário encontrado.</p>';
+                        return;
+                    }
+
+                    res.list.forEach((u, idx) => {
+                        const dV = formatarData(u.date); dV.setHours(0,0,0,0);
+                        const diff = Math.ceil((dV - hoje) / 86400000);
+                        const cor = diff <= 5 ? "#ef4444" : "#3b82f6";
+                        
+                        // RESTAURAÇÃO EXATA DO VISUAL ORIGINAL
+                        const div = document.createElement('div'); div.className = 'user-row';
+                        div.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                            <div style="max-width: 65%;">
+                                <strong style="font-size:14px;">${u.user}</strong><br>
+                                <span class="creator-badge">Criador: ${u.criador}</span><br>
+                                <span class="pix-badge">PIX: ${u.pix}</span><br>
+                                <small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small>
+                            </div>
+                            <div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">
+                                ${diff < 0 ? 'Expirado' : diff + ' dias'}
+                            </div>
+                        </div>
+                        <div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;">
+                            <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${String(u.wa).replace(/\D/g,'')}')">💬 Chat</button>
+                            <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp('${u.user}','${u.pass}','${u.wa}','${u.date}','${u.val}')">📨 Dados</button>
+                        </div>`;
+                        lista.appendChild(div);
+                    });
+                } else {
+                    lista.innerHTML = '<p style="text-align:center; color:red">Erro ao carregar (API mismatch).</p>';
+                }
+            } catch(e) {
+                console.error(e);
+                lista.innerHTML = '<p style="text-align:center; color:red">Erro de conexão com o servidor.</p>';
+            }
         }
+
         function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); document.querySelectorAll('.user-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none'); }
         function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
-        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); }
+        
+        function copiarPixReal() { 
+            const t = document.getElementById('pix-display').innerText;
+            if(navigator.clipboard) {
+                navigator.clipboard.writeText(t).then(()=>alert("Copiado!")).catch(()=>alert("Erro ao copiar"));
+            } else {
+                const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); 
+            }
+        }
+        
         function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
         function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
         function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
@@ -286,7 +373,7 @@
         }
 
         function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
-        function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
+        function enviarDadosWhatsApp(u,p,w,d,v) { const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Vencimento:* ${d}\n💰 *Valor:* R$ ${v}`; window.open(`https://wa.me/55${String(w).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
 
         function toggleAuto() {
             const btn = document.getElementById('btn-auto');
