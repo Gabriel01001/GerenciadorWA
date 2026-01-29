@@ -162,7 +162,9 @@
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        let currentUserData = null, lastOpenedLink = "";
+        // currentUserData guardará TUDO que veio da planilha (user, pass, data, pix, etc)
+        let currentUserData = null; 
+        let lastOpenedLink = "";
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
         let autoTimer = null;
         let countdownRef = null;
@@ -218,7 +220,9 @@
                 const res = await req.json();
 
                 if (res.success) {
+                    // DADOS VINDOS DIRETAMENTE DA PLANILHA PARA AQUELE USUARIO
                     const dados = res.data;
+                    
                     const dV = formatarData(dados.date); dV.setHours(0,0,0,0);
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     const diff = Math.ceil((dV - hoje) / 86400000);
@@ -230,6 +234,7 @@
                         return;
                     }
 
+                    // SALVA OS DADOS (INCLUINDO O PIX) NA MEMORIA
                     currentUserData = dados;
                     currentUserData.pass = pI; 
                     
@@ -284,7 +289,6 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
-        // --- FUNÇÃO ADMIN DINÂMICA ---
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
@@ -331,7 +335,6 @@
                     `;
 
                     dados.forEach((row) => {
-                        // Assume Data na Coluna 3 (Índice 2)
                         const dateVal = row[2]; 
                         const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
                         const diff = Math.ceil((dV - hoje) / 86400000);
@@ -386,12 +389,12 @@
             });
         }
         
-        // --- CORREÇÃO DO DISPLAY DE PIX ---
+        // --- FUNÇÃO CORRIGIDA: PEGA O PIX EXATO DO USUÁRIO ---
         function abrirModalRenovar() { 
-            // Pega o PIX da sessão atual do usuário
+            // currentUserData contém os dados baixados da planilha no login
             let chaveDaPlanilha = currentUserData.pix;
             
-            // Verifica se está vazio ou é "undefined" e define texto padrão
+            // Tratamento de erro visual
             if (!chaveDaPlanilha || chaveDaPlanilha === "undefined") {
                 chaveDaPlanilha = "Chave não cadastrada";
             }
