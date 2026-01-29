@@ -18,6 +18,7 @@
         button.secondary { background: #e5e7eb; color: #333; }
         button.danger { background: var(--danger); }
         button.edit-btn { background: #3b82f6; color: white; }
+        button.status-btn { background: var(--gold); color: white; border: 1px solid #d97706; }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
@@ -42,6 +43,7 @@
         .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .status-active { background-color: #10b981; }
         .status-expired { background-color: #ef4444; }
+        .status-pending { background-color: #f59e0b; }
         
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
@@ -49,11 +51,8 @@
         .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* ESTILO DO FORMULARIO */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .full-width { grid-column: span 2; }
-
-        /* Estilo para links não salvos */
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
     </style>
@@ -127,12 +126,9 @@
             </div>
 
             <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: none !important; align-items: center; gap: 10px; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Auto (seg):</span>
-                    <input type="number" id="auto-time" value="5" style="width: 50px; padding: 6px; margin: 0; text-align: center;" min="1">
-                    <span id="countdown-display" style="font-size: 12px; font-weight: bold; color: #ef4444; margin-left: 5px;"></span>
-                </div>
                 <button id="btn-auto" onclick="toggleAuto()" class="btn-auto" style="background: #0ea5e9; width: 80px !important;">Iniciar</button>
+                <input type="number" id="auto-time" value="5">
+                <span id="countdown-display"></span>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -465,6 +461,32 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
+        // --- FUNÇÃO DE STATUS DO ADMIN ---
+        async function alterarStatus(targetUser) {
+            if(!confirm("Deseja alterar o status deste usuário (Aprovar/Bloquear)?")) return;
+            
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'toggle_status', 
+                        user: currentUserData.user, 
+                        pass: currentUserData.pass,
+                        targetUser: targetUser
+                    })
+                });
+                const res = await req.json();
+                if(res.success) {
+                    alert("Status alterado para: " + res.novoStatus);
+                    abrirAdminPanel(); // Recarrega a lista
+                } else {
+                    alert("Erro: " + res.msg);
+                }
+            } catch(e) {
+                alert("Erro de conexão.");
+            }
+        }
+
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
@@ -523,6 +545,10 @@
                         const uDate = row[2] || "";
                         const uWa   = row[3] || "";
                         const uVal  = row[4] || "";
+                        
+                        // Status na coluna 8 (I)
+                        const statusAcc = row[8] || "Ativo"; 
+                        const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅');
 
                         html += `
                         <tr>
@@ -536,6 +562,7 @@
                         html += `
                             <td>
                                 <div style="display:flex; gap:5px;">
+                                    <button class="status-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>
                                     <button class="chat-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button>
                                     <button class="vip-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button>
                                     <button class="edit-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button>
@@ -785,8 +812,6 @@
         function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
         function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
         function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
-        
-        // FUNÇÃO DE LIMPEZA E RESGATE PARA DESCARTADOS
         function limparDescartados() { if(confirm("Limpar descartados?")) { db[currentUserData.user].naoSalvos = []; pgDesc = 0; renderizar(); } }
         function resgatarDescartado(idx) { const u = currentUserData.user; const link = db[u].naoSalvos[idx]; db[u].links.push(link); db[u].naoSalvos.splice(idx, 1); renderizar(); }
         
@@ -795,30 +820,22 @@
         
         function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
 
-        // --- ALTERAÇÃO IMPORTANTE NA ABERTURA DE LINKS ---
         function tratarAberturaLink(idx, link) { 
-            // 1. Verifica se já existe um link aberto pendente (lastOpenedLink)
-            // Se existir, significa que o usuário NÃO clicou em "Sim" para salvá-lo.
+            // Se existia um link anterior pendente, ele foi descartado (Não Salvo)
             if (lastOpenedLink) {
                 if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = [];
-                // Move o link ANTERIOR para a lista de Não Salvos
                 db[currentUserData.user].naoSalvos.push(lastOpenedLink);
             }
 
-            // 2. Define o NOVO link como o atual aberto
             lastOpenedLink = link; 
 
-            // 3. Abre o novo link
             if(link.includes('http')) {
                 window.open(link); 
             } else {
                 window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`);
             }
 
-            // 4. Remove o novo link da lista de Pendentes
             db[currentUserData.user].links.splice(idx, 1); 
-
-            // 5. Atualiza a tela e mostra a pergunta para este novo link
             document.getElementById('last-link-opened').innerText = link; 
             document.getElementById('save-prompt').style.display = 'flex'; 
             renderizar(); 
@@ -832,7 +849,6 @@
             if(sim && lastOpenedLink) { 
                 db[u].salvos.push(lastOpenedLink); 
             } else if (!sim && lastOpenedLink) {
-                // Se clicar em NÃO, também move explicitamente para Não Salvos
                 db[u].naoSalvos.push(lastOpenedLink);
             }
             
@@ -844,7 +860,52 @@
         function enviarDadosWhatsApp(u,p,w,d,v) { const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Vencimento:* ${d}\n💰 *Valor:* R$ ${v}`; window.open(`https://wa.me/55${String(w).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
 
         function toggleAuto() {
-            // ... (auto code hidden) ...
+            const btn = document.getElementById('btn-auto');
+            const display = document.getElementById('countdown-display');
+            const u = currentUserData.user;
+            
+            if (autoTimer) {
+                clearInterval(autoTimer);
+                clearInterval(countdownRef);
+                autoTimer = null;
+                countdownRef = null;
+                btn.innerText = "Iniciar";
+                btn.style.background = "#0ea5e9";
+                display.innerText = "";
+                return;
+            }
+
+            const tempo = parseInt(document.getElementById('auto-time').value);
+            if (!tempo || tempo < 1) return alert("Tempo inválido");
+            if (db[u].links.length === 0) return alert("Sem links pendentes.");
+
+            btn.innerText = "Parar";
+            btn.style.background = "#ef4444";
+
+            const runCountdown = (t) => {
+                let count = t;
+                display.innerText = `(${count}s)`;
+                clearInterval(countdownRef);
+                countdownRef = setInterval(() => {
+                    count--;
+                    if(count > 0) display.innerText = `(${count}s)`;
+                    else display.innerText = "...";
+                }, 1000);
+            };
+
+            const processar = () => {
+                if (db[u].links.length === 0) {
+                    toggleAuto();
+                    alert("Finalizado!");
+                    return;
+                }
+                const link = db[u].links[0];
+                tratarAberturaLink(0, link);
+                runCountdown(tempo);
+            };
+
+            processar();
+            autoTimer = setInterval(processar, tempo * 1000);
         }
     </script>
 </body>
