@@ -162,7 +162,7 @@
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        // currentUserData guardará TUDO que veio da planilha (user, pass, data, pix, etc)
+        // currentUserData guardará os dados VINDO DO SERVIDOR (incluindo o PIX)
         let currentUserData = null; 
         let lastOpenedLink = "";
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
@@ -220,9 +220,7 @@
                 const res = await req.json();
 
                 if (res.success) {
-                    // DADOS VINDOS DIRETAMENTE DA PLANILHA PARA AQUELE USUARIO
                     const dados = res.data;
-                    
                     const dV = formatarData(dados.date); dV.setHours(0,0,0,0);
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     const diff = Math.ceil((dV - hoje) / 86400000);
@@ -234,7 +232,7 @@
                         return;
                     }
 
-                    // SALVA OS DADOS (INCLUINDO O PIX) NA MEMORIA
+                    // AQUI O HTML SALVA O PIX QUE VEIO DA PLANILHA
                     currentUserData = dados;
                     currentUserData.pass = pI; 
                     
@@ -389,12 +387,10 @@
             });
         }
         
-        // --- FUNÇÃO CORRIGIDA: PEGA O PIX EXATO DO USUÁRIO ---
         function abrirModalRenovar() { 
-            // currentUserData contém os dados baixados da planilha no login
+            // USA O PIX QUE FOI GUARDADO NO LOGIN
             let chaveDaPlanilha = currentUserData.pix;
             
-            // Tratamento de erro visual
             if (!chaveDaPlanilha || chaveDaPlanilha === "undefined") {
                 chaveDaPlanilha = "Chave não cadastrada";
             }
