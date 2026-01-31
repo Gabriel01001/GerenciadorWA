@@ -34,6 +34,7 @@
         button.renew-btn { background: #8b5cf6; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
+        
         .tutorial-btn-orange { background: linear-gradient(135deg, #fb923c, #ea580c); color: white; border: none; padding: 8px 20px; font-size: 12px; border-radius: 25px; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4); transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .tutorial-btn-orange:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 15px rgba(234, 88, 12, 0.6); filter: brightness(1.1); }
         .tutorial-card { background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); border-radius: 15px; padding: 15px; margin-bottom: 20px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -43,27 +44,48 @@
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
-        
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); padding: 20px; }
         .modal-overlay.show { display:flex; }
         
         .modal-content { background:var(--card); padding: 20px; border-radius:20px; width: 100%; max-width: 400px; position:relative; color: var(--text); max-height: 80vh; overflow-y: auto; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
         
-        /* --- AJUSTE DE LARGURA DO MODAL NO PC --- */
+        /* MODAL GIGANTE NO PC PARA FACILITAR LEITURA */
         @media (min-width: 768px) {
             #modal-admin .modal-content {
-                max-width: 1200px; /* BEM LARGO */
-                width: 95%;
+                max-width: 1400px; /* Quase tela cheia */
+                width: 98%;
             }
         }
 
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 13px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
+        
         .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
         .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
-        .admin-table th { background: #f3f4f6; color: #374151; padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
-        .admin-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
+        
+        /* --- CORREÇÃO DE ALINHAMENTO V57 --- */
+        .admin-table th { 
+            background: #f3f4f6; 
+            color: #374151; 
+            padding: 12px; 
+            text-align: center !important; /* FORÇA CENTRALIZAR */
+            font-weight: 700; 
+            border-bottom: 2px solid #e5e7eb; 
+            white-space: nowrap; 
+        }
+        .admin-table td { 
+            padding: 10px; 
+            border-bottom: 1px solid #eee; 
+            vertical-align: middle; 
+            white-space: nowrap; 
+            text-align: center !important; /* FORÇA CENTRALIZAR DADOS */
+        }
+        
         .admin-table tr:hover { background: rgba(0,0,0,0.02); }
+        
+        /* CLASSE PARA OCULTAR COLUNAS AUTOMATICAMENTE */
+        .col-extra { display: none; }
+        
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-active { background-color: #10b981; }
         .status-expired { background-color: #ef4444; }
@@ -202,6 +224,12 @@
             </div>
             
             <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
+            
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <input type="checkbox" id="toggle-details" onchange="toggleDetalhes()">
+                <label for="toggle-details" style="font-size:13px; cursor:pointer;">👁️ Mostrar Detalhes (Senha, Pix, etc)</label>
+            </div>
+
             <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
             <div id="admin-users-list"></div>
         </div>
@@ -227,7 +255,7 @@
     <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;"> <div class="modal-content" style="max-width: 350px;"> <div style="text-align:center; margin-bottom:20px;"> <div style="font-size:50px; margin-bottom:10px;">⚡</div> <h3 style="margin-top:0; font-size: 20px; font-weight: 700;">Instalar App</h3> <p style="font-size:14px; color: var(--text); line-height: 1.5;">Para a melhor experiência, adicione este app à sua tela inicial.</p> </div> <button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; font-size: 16px; padding: 15px;" onclick="instalarAndroid()">📲 Instalar Agora</button> <div id="tutorial-ios" class="hidden"><div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span> abaixo.</div><div class="tutorial-step">2. Role e selecione <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div></div> <div id="tutorial-android" class="hidden"><div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span> no topo do navegador.</div><div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar app</b>.</div></div> <button class="secondary btn-auto" style="width:100% !important; margin-top:15px;" onclick="fecharInstallModal()">Agora não</button> </div> </div>
     <div id="modal-global-msg" class="modal-overlay" style="z-index: 1100;"> <div class="modal-content" style="max-width: 400px; text-align: center;"> <div style="font-size: 40px; margin-bottom: 10px;">🔔</div> <h3 style="margin-top:0; color: var(--primary);">Comunicado</h3> <p id="msg-text" style="font-size: 14px; color: #333 !important; background: #f3f4f6; padding: 15px; border-radius: 10px;"></p> <button onclick="marcarMensagemLida()" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button> </div> </div>
     <div id="modal-send-whatsapp" class="modal-overlay" style="z-index: 1200;"> <div class="modal-content" style="max-width: 400px;"> <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span> <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3> <p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p> <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;"><div style="font-weight:bold; margin-bottom:5px;">📋 Dados que serão enviados:</div><div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div></div> <label style="font-size:12px; font-weight:bold;">Mensagem Complementar (Opcional):</label> <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Ex: 'Aproveite sua tela!', 'Pagamento Confirmado', etc."></textarea> <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button> </div> </div>
-    <div id="modal-created-success" class="modal-overlay" style="z-index: 1300;"> <div class="modal-content" style="max-width: 350px; text-align:center;"> <div style="font-size: 50px;">✅</div> <h3 style="margin: 10px 0;">Usuário Criado!</h3> <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p> <div style="display:flex; flex-direction:column; gap:10px;"><button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button><button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button></div> </div> </div>
+    <div id="modal-created-success" class="modal-overlay" style="z-index: 1300;"> <div class="modal-content" style="max-width: 350px; text-align:center;"> <div style="font-size: 50px;">✅</div> <h3 style="margin-top:0; color:var(--primary);">Usuário Criado!</h3> <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p> <div style="display:flex; flex-direction:column; gap:10px;"><button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button><button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button></div> </div> </div>
 
     <script>
         // === URL DA SUA API ===
@@ -432,6 +460,15 @@
         async function alterarStatus(targetUser) { if(!confirm("Deseja alterar o status deste usuário?")) return; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggle_status', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser }) }); const res = await req.json(); if(res.success) { alert("Status alterado: " + res.novoStatus); abrirAdminPanel(); } else { alert("Erro: " + res.msg); } } catch(e) { alert("Erro de conexão."); } }
         async function clickRenovar(targetUser) { const dias = prompt("Renovar por quantos dias?", "30"); if (!dias) return; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'renew_user', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser, days: dias }) }); const res = await req.json(); if (res.success) { alert("Usuário renovado com sucesso!"); abrirAdminPanel(); } else { alert("Erro: " + res.msg); } } catch(e) { alert("Erro de conexão."); } }
         
+        // --- FUNÇÃO PARA OCULTAR/MOSTRAR COLUNAS ---
+        function toggleDetalhes() {
+            const chk = document.getElementById('toggle-details');
+            const extras = document.querySelectorAll('.col-extra');
+            extras.forEach(el => {
+                el.style.display = chk.checked ? 'table-cell' : 'none';
+            });
+        }
+
         async function abrirAdminPanel() { 
             document.getElementById('modal-admin').classList.add('show'); 
             const lista = document.getElementById('admin-users-list'); 
@@ -445,25 +482,32 @@
                 const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); 
                 const res = await req.json(); 
                 
-                // --- CORREÇÃO IMPORTANTE AQUI: USA OS HEADERS DO BACKEND ---
                 if(res.success && Array.isArray(res.list)) { 
-                    const headers = res.headers || []; // Pega os títulos
+                    const headers = res.headers || []; 
                     const dados = res.list; 
                     const hoje = new Date(); hoje.setHours(0,0,0,0); 
                     if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } 
                     
+                    // --- COLUNAS QUE NASCEM OCULTAS ---
+                    const hiddenCols = ['pass', 'valor', 'criador', 'pix', 'cargo', 'cadastro', 'volor revenda', 'valor revenda'];
+                    
                     let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; 
                     
-                    // Renderiza os títulos dinamicamente
-                    headers.forEach(h => { html += `<th>${h}</th>`; }); 
+                    // Renderiza Títulos (Headers) com classe oculta se necessário
+                    headers.forEach(h => { 
+                        const isHidden = hiddenCols.includes(String(h).toLowerCase());
+                        const hiddenClass = isHidden ? 'class="col-extra"' : '';
+                        html += `<th ${hiddenClass}>${h}</th>`; 
+                    }); 
                     
                     html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; 
+                    
                     const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; 
                     dados.forEach((row) => { 
                         const dateVal = row[2]; 
                         const userRole = row[5]; 
                         let statusText = ""; let displayStatusDot = "status-active"; let statusBtn = ''; 
-                        const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : (statusAcc === 'Expirado' ? '🛑' : '✅')); 
+                        const uUser = row[0] || ""; const uWa = row[3] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : (statusAcc === 'Expirado' ? '🛑' : '✅')); 
                         
                         if (userRole === 'Teste') { 
                             if (statusAcc === 'Expirado') { displayStatusDot = "status-expired"; statusText = "Expirado"; } 
@@ -491,12 +535,22 @@
                         
                         html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${statusText}"></span><small>${statusText}</small></td>`; 
                         
-                        // Renderiza as células de dados
-                        row.forEach(cell => { html += `<td>${cell}</td>`; }); 
+                        // Renderiza células de dados respeitando a ocultação
+                        row.forEach((cell, index) => { 
+                            const hName = headers[index] || "";
+                            const isHidden = hiddenCols.includes(String(hName).toLowerCase());
+                            const hiddenClass = isHidden ? 'class="col-extra"' : '';
+                            html += `<td ${hiddenClass}>${cell}</td>`; 
+                        }); 
                         
+                        const uPass = row[1]; const uDate = row[2]; const uVal = row[4];
                         html += `<td><div style="display:flex; gap:5px;">${statusBtn}${renewBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="prepararEnvioWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; 
                     }); 
                     html += `</tbody></table></div>`; lista.innerHTML = html; 
+                    
+                    // Aplica o estado inicial do checkbox
+                    toggleDetalhes();
+                    
                 } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } 
             } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } 
         }
