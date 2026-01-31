@@ -456,10 +456,9 @@
             const savedTut = localStorage.getItem('zapflow_tutorial_data');
             if(savedTut) {
                 try {
-                    // Tenta fazer parse como array
                     const parsed = JSON.parse(savedTut);
                     if(Array.isArray(parsed)) tutorialList = parsed;
-                    else if(parsed.title) tutorialList = [parsed]; // Converte legado para array
+                    else if(parsed.title) tutorialList = [parsed]; 
                 } catch(e) { console.log("Erro parse local"); }
             }
 
@@ -526,7 +525,7 @@
             document.getElementById('form-title').innerText = "Novo Tutorial";
             document.getElementById('tut-title').value = '';
             document.getElementById('tut-link').value = '';
-            document.getElementById('tut-id').value = '-1'; // -1 indica novo
+            document.getElementById('tut-id').value = '-1'; 
             document.getElementById('tutorial-form').style.display = 'block';
         }
 
@@ -551,10 +550,8 @@
             if(!title || !link) return alert("Preencha tudo!");
 
             if(id === -1) {
-                // Adicionar Novo
                 tutorialList.push({ title, link });
             } else {
-                // Editar Existente
                 tutorialList[id] = { title, link };
             }
 
@@ -571,11 +568,9 @@
         }
 
         async function salvarNoBanco() {
-            // Salva Local
             localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList));
             atualizarBotaoHome();
 
-            // Salva no Server
             try {
                 await fetch(API_URL, {
                     method: 'POST',
@@ -714,17 +709,14 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    // --- CARREGAR DADOS DO TUTORIAL (NOVO FORMATO ARRAY) ---
+                    // --- CARREGAR DADOS DO TUTORIAL ---
                     if (dados.tutorialConfig) {
-                        // Se vier array direto
                         if(Array.isArray(dados.tutorialConfig)) {
                             tutorialList = dados.tutorialConfig;
                         } 
-                        // Se vier objeto antigo (legado)
                         else if(dados.tutorialConfig.title) {
                             tutorialList = [dados.tutorialConfig];
                         }
-                        // Salva para cache
                         localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList));
                     }
                     atualizarBotaoHome();
@@ -1007,4 +999,65 @@
                     tempUser = u; tempPass = p; tempDate = (cargo === 'Teste' ? "1 Hora (Teste)" : dataFinal); tempWa = w; tempVal = v;
                     fecharModal('modal-create');
                     document.getElementById('modal-created-success').classList.add('show');
-                    abrirAdminPanel();
+                    abrirAdminPanel(); 
+                } else { 
+                    msg.innerText = res.msg; 
+                } 
+            } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } 
+        }
+
+        function fecharModalSucessoCriacao() {
+            document.getElementById('modal-created-success').classList.remove('show');
+        }
+
+        function prepararEnvioAposCriacao() {
+            fecharModalSucessoCriacao();
+            prepararEnvioWhatsApp(tempUser, tempPass, tempWa, tempDate, tempVal);
+        }
+
+        function prepararEnvioWhatsApp(u, p, w, d, v) {
+            tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
+            document.getElementById('send-dest').innerText = u;
+            
+            // PREVIEW DOS DADOS
+            const previewHtml = `
+                👤 <b>Usuário:</b> ${u}<br>
+                🔑 <b>Senha:</b> ${p}<br>
+                📅 <b>Vencimento:</b> ${d}<br>
+                🌐 <b>Site:</b> www.gerenciadorwa.com.br
+            `;
+            document.getElementById('preview-msg-content').innerHTML = previewHtml;
+
+            document.getElementById('whatsapp-extra-msg').value = ""; 
+            document.getElementById('modal-send-whatsapp').classList.add('show');
+        }
+
+        function finalizarEnvioWhatsApp() {
+            const extra = document.getElementById('whatsapp-extra-msg').value;
+            const quebra = extra ? `\n\n${extra}` : "";
+            
+            const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${tempUser}\n🔑 *Senha:* ${tempPass}\n📅 *Vencimento:* ${tempDate}\n🌐 *Site:* www.gerenciadorwa.com.br${quebra}`;
+            
+            window.open(`https://wa.me/55${String(tempWa).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+            fecharModal('modal-send-whatsapp');
+        }
+
+        function abrirModalEdit(user, pass, date, wa, val) { userEditing = user; document.getElementById('edit-user-display').innerText = user; document.getElementById('edit-pass').value = pass; document.getElementById('edit-date').value = date; document.getElementById('edit-wa').value = wa; document.getElementById('edit-val').value = val; document.getElementById('msg-edit').innerText = ''; document.getElementById('modal-edit').classList.add('show'); }
+        async function salvarEdicao() { const btn = document.getElementById('btn-save-edit'); const msg = document.getElementById('msg-edit'); const payload = { userOriginal: userEditing, pass: document.getElementById('edit-pass').value, date: document.getElementById('edit-date').value, wa: document.getElementById('edit-wa').value, val: document.getElementById('edit-val').value }; btn.disabled = true; btn.innerText = "Atualizando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: payload }) }); const res = await req.json(); if(res.success) { alert("Atualizado!"); fecharModal('modal-edit'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
+        function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); const linhas = document.querySelectorAll('.admin-table tbody tr'); linhas.forEach(tr => { const texto = tr.innerText.toLowerCase(); tr.style.display = texto.includes(termo) ? '' : 'none'; }); }
+        function abrirModalRenovar() { let chave = currentUserData.pix; if (!chave || chave === "undefined") chave = "Chave não cadastrada"; document.getElementById('pix-display').innerText = chave; document.getElementById('modal-renovar').classList.add('show'); }
+        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; if(navigator.clipboard) { navigator.clipboard.writeText(t).then(()=>alert("Copiado!")); } else { const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); } }
+        function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
+        function limparPendentes() { if(confirm("Apagar?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
+        function limparSalvos() { if(confirm("Limpar?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
+        function limparDescartados() { if(confirm("Limpar?")) { db[currentUserData.user].naoSalvos = []; pgDesc = 0; renderizar(); } }
+        function resgatarDescartado(idx) { const u = currentUserData.user; const link = db[u].naoSalvos[idx]; db[u].links.push(link); db[u].naoSalvos.splice(idx, 1); renderizar(); }
+        function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
+        function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
+        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        function tratarAberturaLink(idx, link) { if (lastOpenedLink) { if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = []; db[currentUserData.user].naoSalvos.push(lastOpenedLink); } lastOpenedLink = link; if(link.includes('http')) { window.open(link); } else { window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`); } db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
+        function confirmarSalvamento(sim) { const u = currentUserData.user; if(!db[u].salvos) db[u].salvos=[]; if(!db[u].naoSalvos) db[u].naoSalvos=[]; if(sim && lastOpenedLink) { db[u].salvos.push(lastOpenedLink); } else if (!sim && lastOpenedLink) { db[u].naoSalvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
+        function toggleAuto() { /* ... */ }
+    </script>
+</body>
+</html>
