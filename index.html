@@ -581,7 +581,7 @@
                 } 
                 
                 // --- BOTÃO DE RENOVAR ---
-                const renewBtn = `<button class="renew-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Renovar" onclick="clickRenovar('${uUser}')">🔄</button>`;
+                const renewBtn = `<button class="renew-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Renovar" onclick="clickRenovar('${uUser}')">📅</button>`;
 
                 html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${statusText}"></span><small>${statusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}${renewBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
         
