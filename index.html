@@ -7,6 +7,7 @@
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
+    
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,13 +16,17 @@
     <style>
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; --purple: #8b5cf6; }
         body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
-        * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
-        .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        * { box-sizing: border-box; } 
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; transition: 0.3s; }
+        
+        .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
-        input, textarea, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
+        
+        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
         body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #374151; color: white; border-color: #4b5563; }
-        button { width: 100%; padding: 14px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
-        button:hover { filter: brightness(0.9); transform: translateY(-2px); }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+        button:hover { filter: brightness(0.9); transform: translateY(-1px); }
         button.secondary { background: #e5e7eb; color: #333; }
         button.danger { background: var(--danger); }
         button.edit-btn { background: #3b82f6; color: white; }
@@ -31,46 +36,62 @@
         button.chat-btn { background: #25d366; color: white; }
         button.renew-btn { background: #8b5cf6; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .card { background: var(--card); border: 1px solid #e5e7eb; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
         
-        /* MODAL FIX: Ajuste para não cortar em telas pequenas */
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(5px); }
+        /* --- MODAL RESPONSIVO (CORREÇÃO) --- */
+        .modal-overlay { 
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.85); 
+            display:none; justify-content:center; align-items:center; 
+            z-index:1000; backdrop-filter: blur(4px); 
+            padding: 20px; /* Evita colar nas bordas */
+        }
         .modal-overlay.show { display:flex; }
+        
         .modal-content { 
             background:var(--card); 
-            padding: 20px; /* Reduzi um pouco o padding */
+            padding: 20px; 
             border-radius:20px; 
-            width:90%; 
-            max-width:350px; 
+            width: 100%; /* Ocupa largura disponível */
+            max-width: 400px; /* Mas para em 400px */
             position:relative; 
             color: var(--text); 
-            max-height: 85vh; /* Reduzi para não bater nas bordas */
-            overflow-y: auto; /* Garante a rolagem */
+            
+            /* Lógica de Altura para não cortar */
+            max-height: 80vh; 
+            overflow-y: auto; 
+            
             text-align: center; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); 
         }
 
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
-        .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
+        .pay-key { font-family: monospace; font-size: 13px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
+        
         .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
-        .admin-table th { background: #f3f4f6; color: #374151; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
-        .admin-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
+        .admin-table th { background: #f3f4f6; color: #374151; padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+        .admin-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
         .admin-table tr:hover { background: rgba(0,0,0,0.02); }
+        
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-active { background-color: #10b981; }
         .status-expired { background-color: #ef4444; }
         .status-pending { background-color: #f59e0b; }
         .status-test { background-color: #8b5cf6; }
+        
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 24px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .full-width { grid-column: span 2; }
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
@@ -233,7 +254,7 @@
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
-                    <input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;">
+                    <input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333; width: 100%;">
                     <button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button>
                 </div>
             </div>
@@ -241,7 +262,7 @@
             <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
                 <div style="display:flex; gap:8px;">
-                    <input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333;">
+                    <input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333; width: 100%;">
                     <button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button>
                 </div>
             </div>
