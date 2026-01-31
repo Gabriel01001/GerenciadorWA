@@ -34,15 +34,12 @@
         button.renew-btn { background: #8b5cf6; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
-        
         .tutorial-btn-orange { background: linear-gradient(135deg, #fb923c, #ea580c); color: white; border: none; padding: 8px 20px; font-size: 12px; border-radius: 25px; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4); transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .tutorial-btn-orange:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 15px rgba(234, 88, 12, 0.6); filter: brightness(1.1); }
-        
         .tutorial-card { background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); border-radius: 15px; padding: 15px; margin-bottom: 20px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         body.dark-mode .tutorial-card { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
         .tutorial-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .tut-title-text { font-weight: 700; color: var(--primary); margin-bottom: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
@@ -52,34 +49,26 @@
         
         .modal-content { background:var(--card); padding: 20px; border-radius:20px; width: 100%; max-width: 400px; position:relative; color: var(--text); max-height: 80vh; overflow-y: auto; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
         
-        /* --- AQUI ESTÁ A MÁGICA: AUMENTA O MODAL NO PC --- */
+        /* --- AJUSTE DE LARGURA DO MODAL NO PC --- */
         @media (min-width: 768px) {
             #modal-admin .modal-content {
-                max-width: 950px; /* Bem largo no PC */
-                width: 90%;
+                max-width: 1200px; /* BEM LARGO */
+                width: 95%;
             }
         }
 
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 13px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
-        
         .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
         .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
         .admin-table th { background: #f3f4f6; color: #374151; padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
         .admin-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
         .admin-table tr:hover { background: rgba(0,0,0,0.02); }
-        
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-active { background-color: #10b981; }
         .status-expired { background-color: #ef4444; }
         .status-pending { background-color: #f59e0b; }
-        
-        /* --- BOLINHA DE TESTE (AGORA CIANO NEON) --- */
-        .status-test { 
-            background-color: #06b6d4; /* Ciano/Azul Vibrante */
-            box-shadow: 0 0 6px #06b6d4;
-        }
-        
+        .status-test { background-color: #06b6d4; box-shadow: 0 0 6px #06b6d4; }
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 24px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; margin-bottom: 20px; font-size: 13px; }
@@ -188,6 +177,36 @@
         </div>
     </div>
 
+    <div id="modal-admin" class="modal-overlay">
+        <div class="modal-content">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-admin')">&times;</span>
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="color: var(--dark); font-size: 20px; margin:0;">⚙️ Gestão Master</h2>
+                <div style="display:flex; gap:8px;"><button class="secondary btn-auto" onclick="abrirAdminPanel()">🔄</button><button class="chat-btn btn-auto" onclick="abrirModalCreate()">➕ Novo</button></div>
+            </div>
+            
+            <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
+                <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
+                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Enviar Aviso</button>
+            </div>
+
+            <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
+                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333; width: 100%;"><button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button></div>
+            </div>
+
+            <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
+                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333; width: 100%;"><button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button></div>
+            </div>
+            
+            <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
+            <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
+            <div id="admin-users-list"></div>
+        </div>
+    </div>
+
     <div id="modal-tutorials" class="modal-overlay" style="z-index: 1500;">
         <div class="modal-content">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorials')">&times;</span>
@@ -199,32 +218,6 @@
                 <button onclick="salvarTutorial()" class="btn-auto" style="background:#f97316; width:100% !important;">Salvar Vídeo</button>
             </div>
             <div id="tutorials-list" style="text-align:left; padding-bottom: 10px;"><p style="text-align:center; color:#666; font-size:13px;">Carregando...</p></div>
-        </div>
-    </div>
-
-    <div id="modal-admin" class="modal-overlay">
-        <div class="modal-content">
-            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-admin')">&times;</span>
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="color: var(--dark); font-size: 20px; margin:0;">⚙️ Gestão Master</h2>
-                <div style="display:flex; gap:8px;"><button class="secondary btn-auto" onclick="abrirAdminPanel()">🔄</button><button class="chat-btn btn-auto" onclick="abrirModalCreate()">➕ Novo</button></div>
-            </div>
-            <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
-                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
-                <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
-                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Enviar Aviso</button>
-            </div>
-            <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
-                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
-                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333; width: 100%;"><button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button></div>
-            </div>
-            <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
-                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
-                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333; width: 100%;"><button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button></div>
-            </div>
-            <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
-            <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
-            <div id="admin-users-list"></div>
         </div>
     </div>
 
@@ -451,20 +444,27 @@
             try { 
                 const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); 
                 const res = await req.json(); 
+                
+                // --- CORREÇÃO IMPORTANTE AQUI: USA OS HEADERS DO BACKEND ---
                 if(res.success && Array.isArray(res.list)) { 
-                    const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); 
+                    const headers = res.headers || []; // Pega os títulos
+                    const dados = res.list; 
+                    const hoje = new Date(); hoje.setHours(0,0,0,0); 
                     if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } 
+                    
                     let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; 
+                    
+                    // Renderiza os títulos dinamicamente
                     headers.forEach(h => { html += `<th>${h}</th>`; }); 
+                    
                     html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; 
                     const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; 
                     dados.forEach((row) => { 
                         const dateVal = row[2]; 
-                        const userRole = row[5]; // Coluna Cargo
+                        const userRole = row[5]; 
                         let statusText = ""; let displayStatusDot = "status-active"; let statusBtn = ''; 
                         const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : (statusAcc === 'Expirado' ? '🛑' : '✅')); 
                         
-                        // Lógica da Bolinha Ciano para Teste
                         if (userRole === 'Teste') { 
                             if (statusAcc === 'Expirado') { displayStatusDot = "status-expired"; statusText = "Expirado"; } 
                             else { displayStatusDot = "status-test"; statusText = "Teste"; } 
@@ -488,8 +488,12 @@
                         if (isSubAdmin) { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; } 
                         else { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; } 
                         const renewBtn = `<button class="renew-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Renovar" onclick="clickRenovar('${uUser}')">📅</button>`; 
+                        
                         html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${statusText}"></span><small>${statusText}</small></td>`; 
+                        
+                        // Renderiza as células de dados
                         row.forEach(cell => { html += `<td>${cell}</td>`; }); 
+                        
                         html += `<td><div style="display:flex; gap:5px;">${statusBtn}${renewBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="prepararEnvioWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; 
                     }); 
                     html += `</tbody></table></div>`; lista.innerHTML = html; 
