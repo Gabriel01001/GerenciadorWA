@@ -49,11 +49,11 @@
         
         .modal-content { background:var(--card); padding: 20px; border-radius:20px; width: 100%; max-width: 400px; position:relative; color: var(--text); max-height: 80vh; overflow-y: auto; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
         
-        /* MODAL GIGANTE NO PC */
+        /* MODAL GIGANTE NO PC PARA FACILITAR LEITURA */
         @media (min-width: 768px) {
             #modal-admin .modal-content {
                 max-width: 1400px; /* Quase tela cheia */
-                width: 95%;
+                width: 98%;
             }
         }
 
@@ -66,7 +66,7 @@
         .admin-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
         .admin-table tr:hover { background: rgba(0,0,0,0.02); }
         
-        /* CLASSE PARA OCULTAR COLUNAS */
+        /* CLASSE PARA OCULTAR COLUNAS AUTOMATICAMENTE */
         .col-extra { display: none; }
         
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
@@ -210,7 +210,7 @@
             
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
                 <input type="checkbox" id="toggle-details" onchange="toggleDetalhes()">
-                <label for="toggle-details" style="font-size:13px; cursor:pointer;">👁️ Mostrar colunas ocultas (Pass, Pix, etc)</label>
+                <label for="toggle-details" style="font-size:13px; cursor:pointer;">👁️ Mostrar Detalhes (Senha, Pix, etc)</label>
             </div>
 
             <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
@@ -471,7 +471,7 @@
                     const hoje = new Date(); hoje.setHours(0,0,0,0); 
                     if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } 
                     
-                    // Lista de colunas para ocultar
+                    // --- COLUNAS QUE NASCEM OCULTAS ---
                     const hiddenCols = ['pass', 'valor', 'criador', 'pix', 'cargo', 'cadastro', 'volor revenda', 'valor revenda'];
                     
                     let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; 
