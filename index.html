@@ -62,16 +62,25 @@
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .full-width { grid-column: span 2; }
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
-        
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
-
-        /* Estilo Tutorial Install */
         .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
+
+        /* Botão Tutorial Chamativo */
+        .tutorial-badge {
+            background: linear-gradient(45deg, #f59e0b, #ea580c);
+            color: white; padding: 6px 14px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; cursor: pointer;
+            display: inline-block; margin-top: 6px; text-transform: uppercase;
+            box-shadow: 0 3px 8px rgba(234, 88, 12, 0.4);
+            animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .tutorial-badge:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
@@ -101,7 +110,8 @@
             <div class="header">
                 <div style="max-width: 70%;">
                     <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
-                    <small id="status-acesso"></small>
+                    <div id="status-acesso" style="font-size: 13px;"></div>
+                    <div class="tutorial-badge" onclick="abrirModalTutorial()">📺 Assistir Tutorial</div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                     <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Master</button>
@@ -181,6 +191,27 @@
         </div>
     </div>
 
+    <div id="modal-tutorial-video" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: left;">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorial-video')">&times;</span>
+            
+            <h3 style="margin-top:0; color: var(--gold);">🎓 Central de Ajuda</h3>
+            
+            <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 15px; margin-bottom: 20px;">
+                <div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Tutorial em Destaque</div>
+                <h2 id="display-tutorial-title" style="margin: 5px 0 15px 0; font-size: 18px; line-height: 1.3;">Como usar o sistema</h2>
+                <button id="btn-watch-video" class="btn-auto" style="width: 100% !important; background: #c2410c; padding: 12px;">▶️ Assistir Vídeo</button>
+            </div>
+
+            <div id="admin-tutorial-edit" style="display: none; border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 15px;">
+                <div style="font-size: 11px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">🛠️ Configurar Tutorial (Admin)</div>
+                <input type="text" id="edit-tutorial-title" placeholder="Título do Vídeo">
+                <input type="text" id="edit-tutorial-link" placeholder="Link do Vídeo (YouTube/Drive)">
+                <button onclick="salvarConfigTutorial()" class="secondary btn-auto" style="width: 100% !important;">💾 Salvar Configuração</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;">
         <div class="modal-content" style="max-width: 350px;">
             <div style="text-align:center; margin-bottom:20px;">
@@ -188,19 +219,15 @@
                 <h3 style="margin-top:0; font-size: 20px; font-weight: 700;">Instalar App</h3>
                 <p style="font-size:14px; color: var(--text); line-height: 1.5;">Para a melhor experiência, adicione este app à sua tela inicial.</p>
             </div>
-            
             <button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; font-size: 16px; padding: 15px;" onclick="instalarAndroid()">📲 Instalar Agora</button>
-
             <div id="tutorial-ios" class="hidden">
                 <div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span> abaixo.</div>
                 <div class="tutorial-step">2. Role e selecione <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div>
             </div>
-
             <div id="tutorial-android" class="hidden">
                 <div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span> no topo do navegador.</div>
                 <div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar app</b>.</div>
             </div>
-
             <button class="secondary btn-auto" style="width:100% !important; margin-top:15px;" onclick="fecharInstallModal()">Agora não</button>
         </div>
     </div>
@@ -219,15 +246,12 @@
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span>
             <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3>
             <p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p>
-            
             <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;">
                 <div style="font-weight:bold; margin-bottom:5px;">📋 Dados que serão enviados:</div>
                 <div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div>
             </div>
-
             <label style="font-size:12px; font-weight:bold;">Mensagem Complementar (Opcional):</label>
             <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Ex: 'Aproveite sua tela!', 'Pagamento Confirmado', etc."></textarea>
-            
             <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button>
         </div>
     </div>
@@ -237,7 +261,6 @@
             <div style="font-size: 50px;">✅</div>
             <h3 style="margin: 10px 0;">Usuário Criado!</h3>
             <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p>
-            
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button>
                 <button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button>
@@ -255,13 +278,11 @@
                     <button class="chat-btn btn-auto" onclick="abrirModalCreate()">➕ Novo</button>
                 </div>
             </div>
-            
             <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
                 <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
                 <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Enviar Aviso</button>
             </div>
-
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
@@ -269,7 +290,6 @@
                     <button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button>
                 </div>
             </div>
-
             <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
                 <div style="display:flex; gap:8px;">
@@ -278,7 +298,6 @@
                 </div>
             </div>
             <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
-
             <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
             <div id="admin-users-list"></div>
         </div>
@@ -291,18 +310,15 @@
             <div class="form-grid">
                 <input type="text" id="new-user" placeholder="Usuário">
                 <input type="text" id="new-pass" placeholder="Senha">
-                
                 <div class="full-width" id="days-container" style="display:flex; gap:5px; align-items:center;">
                     <input type="number" id="new-days" placeholder="Dias" style="width: 80px; margin:0">
                     <span style="font-size:12px; color:#666">dias de validade</span>
                 </div>
-
                 <div class="full-width" id="role-container">
                     <label style="font-size:12px; font-weight:bold; color:#333;">Tipo de Acesso:</label>
                     <select id="new-role" onchange="checkRole()">
-                        </select>
+                    </select>
                 </div>
-
                 <input type="text" id="new-wa" placeholder="WhatsApp (só números)" class="full-width">
                 <input type="text" id="new-val" placeholder="Valor (ex: 30,00)">
                 <input type="text" id="new-pix" placeholder="Chave PIX (opcional)">
@@ -365,12 +381,17 @@
         let countdownRef = null;
         let userEditing = null;
         let currentFileUrl = "";
-        let deferredPrompt; // Para instalação Android
+        let deferredPrompt; 
 
         // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
 
-        // Captura o evento de instalação (Android)
+        // CONFIG TUTORIAL PADRÃO (Caso não tenha salvo ainda)
+        let tutorialData = {
+            title: "Como usar o sistema",
+            link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" // Link Exemplo
+        };
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -382,7 +403,10 @@
                 document.querySelector('.theme-toggle').innerText = '☀️';
             }
             
-            // Verifica instalação (abre o modal direto após 1s)
+            // CARREGA TUTORIAL SALVO NO LOCALSTORAGE (Cache Local)
+            const savedTut = localStorage.getItem('zapflow_tutorial_config');
+            if(savedTut) tutorialData = JSON.parse(savedTut);
+
             setTimeout(verificarInstalacaoApp, 1000);
 
             const session = localStorage.getItem(SESSION_KEY);
@@ -394,42 +418,84 @@
             }
         };
 
-        // === LÓGICA DE INSTALAÇÃO ATUALIZADA ===
-        function verificarInstalacaoApp() {
-            // Se já for app, não faz nada
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) return;
+        // --- LÓGICA TUTORIAL ---
+        function abrirModalTutorial() {
+            // Atualiza o display com os dados atuais
+            document.getElementById('display-tutorial-title').innerText = tutorialData.title;
+            document.getElementById('btn-watch-video').onclick = function() {
+                window.open(tutorialData.link, '_blank');
+            };
 
-            // Verifica se fechou nas últimas 24h
+            // Se for Admin/Sub-Admin, mostra painel de edição
+            if (currentUserData && (currentUserData.cargo === 'Admin' || currentUserData.cargo === 'Sub-Admin')) {
+                document.getElementById('admin-tutorial-edit').style.display = 'block';
+                document.getElementById('edit-tutorial-title').value = tutorialData.title;
+                document.getElementById('edit-tutorial-link').value = tutorialData.link;
+            } else {
+                document.getElementById('admin-tutorial-edit').style.display = 'none';
+            }
+
+            document.getElementById('modal-tutorial-video').classList.add('show');
+        }
+
+        async function salvarConfigTutorial() {
+            const t = document.getElementById('edit-tutorial-title').value;
+            const l = document.getElementById('edit-tutorial-link').value;
+            
+            if(!t || !l) return alert("Preencha título e link!");
+
+            // Salva localmente para teste imediato
+            tutorialData = { title: t, link: l };
+            localStorage.setItem('zapflow_tutorial_config', JSON.stringify(tutorialData));
+            
+            // Tenta salvar no banco (Usando save_message como improviso ou nova action se suportada)
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'save_tutorial_config', // Nome da action sugerida
+                        user: currentUserData.user,
+                        pass: currentUserData.pass,
+                        title: t,
+                        link: l
+                    })
+                });
+                // Não bloqueamos se der erro no servidor, pois salvamos local
+                alert("Tutorial atualizado!");
+                abrirModalTutorial(); // Atualiza a view
+            } catch(e) {
+                alert("Salvo localmente (Erro ao conectar com servidor).");
+                abrirModalTutorial();
+            }
+        }
+
+        // --- LÓGICA DE INSTALAÇÃO ---
+        function verificarInstalacaoApp() {
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) return;
             const bannerFechadoEm = localStorage.getItem('install_banner_closed');
             if (bannerFechadoEm) {
                 const agora = new Date().getTime();
                 const umDia = 24 * 60 * 60 * 1000;
                 if (agora - parseInt(bannerFechadoEm) < umDia) return; 
             }
-
             abrirTutorialInstall();
         }
 
         function abrirTutorialInstall() {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            
             if (deferredPrompt) {
-                // Se o navegador permite instalação direta (Android moderno)
                 document.getElementById('btn-android-install').classList.remove('hidden');
                 document.getElementById('tutorial-android').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.add('hidden');
             } else if (isIOS) {
-                // iPhone
                 document.getElementById('btn-android-install').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.remove('hidden');
                 document.getElementById('tutorial-android').classList.add('hidden');
             } else {
-                // Android Manual ou PC
                 document.getElementById('btn-android-install').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.add('hidden');
                 document.getElementById('tutorial-android').classList.remove('hidden');
             }
-            
             document.getElementById('modal-install-tutorial').classList.add('show');
         }
 
@@ -514,6 +580,11 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
+                    // --- CARREGAR DADOS DO TUTORIAL DO SERVIDOR (SE EXISTIR) ---
+                    if (dados.tutorialConfig) {
+                        tutorialData = dados.tutorialConfig;
+                    }
+
                     if(diff <= 5 && !dados.isMaster && dados.cargo !== 'Teste') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff < 0 ? 0 : diff;
@@ -534,7 +605,6 @@
                         }
                     }
 
-                    // --- CHECK MENSAGEM GLOBAL (LÓGICA "LIDA") ---
                     if(dados.message && dados.message.trim() !== "") {
                         const savedMsg = localStorage.getItem('zapflow_last_msg_' + currentUserData.user);
                         if (savedMsg !== dados.message) {
@@ -558,14 +628,12 @@
             }
         }
 
-        // --- NOVA FUNÇÃO: MARCAR COMO LIDA ---
         function marcarMensagemLida() {
             const msg = document.getElementById('msg-text').innerText;
             localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg);
             fecharModal('modal-global-msg');
         }
 
-        // --- FUNÇÕES DE INTERFACE DO ADMIN ---
         function checkRole() {
             const r = document.getElementById('new-role').value;
             if(r === 'Teste') {
@@ -733,29 +801,23 @@
         
         function baixarArquivoGeral() { if(currentFileUrl) { const link = document.createElement("a"); link.href = currentFileUrl; link.setAttribute("download", ""); link.setAttribute("target", "_blank"); document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
         
-        // --- CRIAÇÃO DE USUÁRIO COM OPÇÕES DINÂMICAS ---
         function abrirModalCreate() { 
             document.getElementById('new-user').value = ''; 
             document.getElementById('new-pass').value = ''; 
             document.getElementById('new-days').value = '30'; 
             document.getElementById('new-wa').value = ''; 
             document.getElementById('new-val').value = ''; 
-            
             const roleSelect = document.getElementById('new-role');
             roleSelect.innerHTML = ''; 
-
             const optUser = document.createElement('option'); optUser.value = 'User'; optUser.innerText = 'Usuário Comum'; roleSelect.appendChild(optUser);
             const optTest = document.createElement('option'); optTest.value = 'Teste'; optTest.innerText = 'Teste (1 Hora)'; roleSelect.appendChild(optTest);
-
             if (currentUserData.cargo === 'Sub-Admin') { 
                 document.getElementById('new-pix').value = ''; 
             } else { 
                 const optSub = document.createElement('option'); optSub.value = 'Sub-Admin'; optSub.innerText = 'Sub-Admin'; roleSelect.appendChild(optSub);
                 const optAdmin = document.createElement('option'); optAdmin.value = 'Admin'; optAdmin.innerText = 'Admin Master'; roleSelect.appendChild(optAdmin);
-                
                 document.getElementById('new-pix').value = currentUserData.pix || ''; 
             } 
-            
             document.getElementById('role-container').style.display = 'block';
             document.getElementById('days-container').style.display = 'flex';
             document.getElementById('msg-create').innerText = ''; 
@@ -772,26 +834,19 @@
             const v = document.getElementById('new-val').value; 
             const x = document.getElementById('new-pix').value; 
             const cargo = document.getElementById('new-role').value; 
-            
             if(!u || !p || (!d && cargo !== 'Teste')) { msg.innerText = "Preencha os campos."; return; } 
-            
             const dataVenc = new Date(); 
             dataVenc.setDate(dataVenc.getDate() + (d||0)); 
             const dia = ("0" + dataVenc.getDate()).slice(-2); 
             const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); 
             const ano = dataVenc.getFullYear(); 
             const dataFinal = `${dia}/${mes}/${ano}`; 
-            
             const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; 
-            
             btn.disabled = true; btn.innerText = "Salvando..."; 
-            
             try { 
                 const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); 
                 const res = await req.json(); 
-                
                 if(res.success) { 
-                    // SUCESSO: Guarda dados temp e abre modal de escolha
                     tempUser = u; tempPass = p; tempDate = (cargo === 'Teste' ? "1 Hora (Teste)" : dataFinal); tempWa = w; tempVal = v;
                     fecharModal('modal-create');
                     document.getElementById('modal-created-success').classList.add('show');
@@ -814,8 +869,6 @@
         function prepararEnvioWhatsApp(u, p, w, d, v) {
             tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
             document.getElementById('send-dest').innerText = u;
-            
-            // PREVIEW DOS DADOS
             const previewHtml = `
                 👤 <b>Usuário:</b> ${u}<br>
                 🔑 <b>Senha:</b> ${p}<br>
@@ -823,7 +876,6 @@
                 🌐 <b>Site:</b> www.gerenciadorwa.com.br
             `;
             document.getElementById('preview-msg-content').innerHTML = previewHtml;
-
             document.getElementById('whatsapp-extra-msg').value = ""; 
             document.getElementById('modal-send-whatsapp').classList.add('show');
         }
@@ -831,9 +883,7 @@
         function finalizarEnvioWhatsApp() {
             const extra = document.getElementById('whatsapp-extra-msg').value;
             const quebra = extra ? `\n\n${extra}` : "";
-            
             const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${tempUser}\n🔑 *Senha:* ${tempPass}\n📅 *Vencimento:* ${tempDate}\n🌐 *Site:* www.gerenciadorwa.com.br${quebra}`;
-            
             window.open(`https://wa.me/55${String(tempWa).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
             fecharModal('modal-send-whatsapp');
         }
