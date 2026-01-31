@@ -60,7 +60,7 @@
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
         
-        /* NOVO: Estilo para textarea expandível */
+        /* Estilo da caixa de mensagem expandível */
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
     </style>
 </head>
@@ -179,10 +179,15 @@
         <div class="modal-content" style="max-width: 400px;">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span>
             <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3>
-            <p style="font-size:12px; margin-bottom:10px;">Para: <b id="send-dest">...</b></p>
+            <p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p>
             
-            <label style="font-size:12px; font-weight:bold;">Mensagem Complementar:</label>
-            <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Digite algo extra (opcional)... Ex: 'Aproveite sua tela!'"></textarea>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;">
+                <div style="font-weight:bold; margin-bottom:5px;">📋 Dados que serão enviados:</div>
+                <div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div>
+            </div>
+
+            <label style="font-size:12px; font-weight:bold;">Mensagem Complementar (Opcional):</label>
+            <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Ex: 'Aproveite sua tela!', 'Pagamento Confirmado', etc."></textarea>
             
             <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button>
         </div>
@@ -322,7 +327,7 @@
         let userEditing = null;
         let currentFileUrl = "";
 
-        // VARIÁVEIS TEMPORÁRIAS PARA ENVIO
+        // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
 
         window.onload = () => {
@@ -424,7 +429,6 @@
                         }
                     }
 
-                    // --- CHECK MENSAGEM GLOBAL ---
                     if(dados.message && dados.message.trim() !== "") {
                         document.getElementById('msg-text').innerText = dados.message;
                         document.getElementById('modal-global-msg').classList.add('show');
@@ -694,7 +698,17 @@
         function prepararEnvioWhatsApp(u, p, w, d, v) {
             tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
             document.getElementById('send-dest').innerText = u;
-            document.getElementById('whatsapp-extra-msg').value = ""; // Limpa msg anterior
+            
+            // PREVIEW DOS DADOS
+            const previewHtml = `
+                👤 <b>Usuário:</b> ${u}<br>
+                🔑 <b>Senha:</b> ${p}<br>
+                📅 <b>Vencimento:</b> ${d}<br>
+                🌐 <b>Site:</b> www.gerenciadorwa.com.br
+            `;
+            document.getElementById('preview-msg-content').innerHTML = previewHtml;
+
+            document.getElementById('whatsapp-extra-msg').value = ""; 
             document.getElementById('modal-send-whatsapp').classList.add('show');
         }
 
