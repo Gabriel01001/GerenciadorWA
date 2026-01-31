@@ -87,6 +87,11 @@
             </button>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px; font-weight: 600;"></p>
             <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
+            
+            <div style="margin-top: 40px; font-size: 11px; opacity: 0.6; color: var(--text);">
+                <p style="margin:0;">&copy; 2026 Gerenciador |WA|</p>
+                <p style="margin:2px 0 0 0;">Dev: <b>Gabriel Martins</b></p>
+            </div>
         </div>
 
         <div id="app-screen" class="hidden">
@@ -178,7 +183,7 @@
             <div style="font-size: 40px; margin-bottom: 10px;">🔔</div>
             <h3 style="margin-top:0; color: var(--primary);">Comunicado</h3>
             <p id="msg-text" style="font-size: 14px; color: #333 !important; background: #f3f4f6; padding: 15px; border-radius: 10px;"></p>
-            <button onclick="fecharModal('modal-global-msg')" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button>
+            <button onclick="marcarMensagemLida()" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button>
         </div>
     </div>
 
@@ -436,9 +441,13 @@
                         }
                     }
 
+                    // --- CHECK MENSAGEM GLOBAL (LÓGICA "LIDA") ---
                     if(dados.message && dados.message.trim() !== "") {
-                        document.getElementById('msg-text').innerText = dados.message;
-                        document.getElementById('modal-global-msg').classList.add('show');
+                        const savedMsg = localStorage.getItem('zapflow_last_msg_' + currentUserData.user);
+                        if (savedMsg !== dados.message) {
+                            document.getElementById('msg-text').innerText = dados.message;
+                            document.getElementById('modal-global-msg').classList.add('show');
+                        }
                     }
 
                     renderizar();
@@ -454,6 +463,13 @@
                 txt.style.display = 'block';
                 loader.style.display = 'none';
             }
+        }
+
+        // --- NOVA FUNÇÃO: MARCAR COMO LIDA ---
+        function marcarMensagemLida() {
+            const msg = document.getElementById('msg-text').innerText;
+            localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg);
+            fecharModal('modal-global-msg');
         }
 
         // --- FUNÇÕES DE INTERFACE DO ADMIN ---
@@ -748,4 +764,3 @@
     </script>
 </body>
 </html>
-
