@@ -241,14 +241,11 @@
                 <div class="full-width"><label style="font-size:11px; font-weight:bold;">Vencimento:</label><input type="text" id="edit-date" placeholder="DD/MM/AAAA"></div> 
                 <div class="full-width"><label style="font-size:11px; font-weight:bold;">WhatsApp:</label><input type="text" id="edit-wa"></div> 
                 <div class="full-width"><label style="font-size:11px; font-weight:bold;">Valor:</label><input type="text" id="edit-val"></div> 
-                <div class="full-width">
+                
+                <div class="full-width" id="edit-role-container" style="display:none;">
                     <label style="font-size:11px; font-weight:bold;">Função (Cargo):</label>
                     <select id="edit-role">
-                        <option value="User">Usuário</option>
-                        <option value="Teste">Teste</option>
-                        <option value="Sub-Admin">Sub-Admin</option>
-                        <option value="Admin">Admin</option>
-                    </select>
+                        </select>
                 </div>
             </div> 
             <button onclick="salvarEdicao()" id="btn-save-edit" class="edit-btn" style="margin-top:15px;">💾 Atualizar Dados</button> 
@@ -263,7 +260,7 @@
     <div id="modal-created-success" class="modal-overlay" style="z-index: 1300;"> <div class="modal-content" style="max-width: 350px; text-align:center;"> <div style="font-size: 50px;">✅</div> <h3 style="margin-top:0; color:var(--primary);">Usuário Criado!</h3> <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p> <div style="display:flex; flex-direction:column; gap:10px;"><button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button><button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button></div> </div> </div>
 
     <script>
-        // === URL CORRETA (JÁ CONFIGURADA) ===
+        // === URL ATUALIZADA (JÁ ESTÁ COM O SEU LINK CORRETO) ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbyT5_nQAYn-d02DQKMFddh1AZvyCVcocTLZTABAdfjFsbm0P9sNO-afU2JIW-9he2Ri-g/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -473,6 +470,7 @@
             });
         }
 
+        // --- FUNÇÃO CORRIGIDA V61 (MOSTRA/OCULTA CAMPO CARGO) ---
         function abrirModalEdit(user, pass, date, wa, val, role) {
             userEditing = user;
             document.getElementById('edit-user-display').innerText = user;
@@ -481,11 +479,32 @@
             document.getElementById('edit-wa').value = wa;
             document.getElementById('edit-val').value = val;
             
-            // Aqui mantemos a lógica original: se for admin master, o campo cargo pode ser exibido
-            // mas como você pediu para reverter, vou deixar como estava originalmente no seu código (que era fixo)
-            // ou se quiser, posso ocultar/mostrar. No seu código original não tinha essa lógica complexa,
-            // mas vou manter a seleção básica que você tinha.
-            document.getElementById('edit-role').value = role;
+            // VERIFICA SE É ADMIN MASTER
+            const roleContainer = document.getElementById('edit-role-container');
+            const select = document.getElementById('edit-role');
+            
+            if (currentUserData.cargo === 'Admin') {
+                roleContainer.style.display = 'block'; // MOSTRA
+                select.innerHTML = ''; 
+                
+                const ops = [
+                    {v: 'User', t: 'Usuário'},
+                    {v: 'Teste', t: 'Teste (1h)'},
+                    {v: 'Sub-Admin', t: 'Sub-Admin'},
+                    {v: 'Admin', t: 'Admin Master'}
+                ];
+                
+                ops.forEach(op => {
+                    const option = document.createElement('option');
+                    option.value = op.v;
+                    option.innerText = op.t;
+                    if(op.v === role) option.selected = true;
+                    select.appendChild(option);
+                });
+            } else {
+                roleContainer.style.display = 'none'; // ESCONDE PARA SUB-ADMIN
+                select.innerHTML = ''; // Limpa para garantir
+            }
 
             document.getElementById('msg-edit').innerText = '';
             document.getElementById('modal-edit').classList.add('show');
@@ -495,14 +514,19 @@
             const btn = document.getElementById('btn-save-edit');
             const msg = document.getElementById('msg-edit');
             
-            // No seu código original você enviava o cargo direto
+            // Pega o valor do cargo APENAS se o campo estiver visível (Admin)
+            let novoCargo = null;
+            if (currentUserData.cargo === 'Admin') {
+                novoCargo = document.getElementById('edit-role').value;
+            }
+
             const payload = {
                 userOriginal: userEditing,
                 pass: document.getElementById('edit-pass').value,
                 date: document.getElementById('edit-date').value,
                 wa: document.getElementById('edit-wa').value,
                 val: document.getElementById('edit-val').value,
-                cargo: document.getElementById('edit-role').value
+                cargo: novoCargo
             };
             
             btn.disabled = true;
