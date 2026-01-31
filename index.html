@@ -35,9 +35,24 @@
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
+        
+        /* MODAL FIX: Ajuste para não cortar em telas pequenas */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(5px); }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:350px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content { 
+            background:var(--card); 
+            padding: 20px; /* Reduzi um pouco o padding */
+            border-radius:20px; 
+            width:90%; 
+            max-width:350px; 
+            position:relative; 
+            color: var(--text); 
+            max-height: 85vh; /* Reduzi para não bater nas bordas */
+            overflow-y: auto; /* Garante a rolagem */
+            text-align: center; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+        }
+
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
@@ -217,12 +232,18 @@
 
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
-                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;"><button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button></div>
+                <div style="display:flex; gap:8px;">
+                    <input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;">
+                    <button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button>
+                </div>
             </div>
 
             <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
-                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333;"><button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button></div>
+                <div style="display:flex; gap:8px;">
+                    <input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333;">
+                    <button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button>
+                </div>
             </div>
             <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
 
@@ -277,7 +298,7 @@
     </div>
 
     <script>
-        // === URL DA SUA API - ATUALIZE AQUI SE AINDA NÃO FEZ ===
+        // === URL DA SUA API ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzh5LpH26j4OyfMINRHP0XXikBZwFHKFYseMv8eXyJKP5X4cJKbij37wNJS3wg3YUUm/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -357,19 +378,13 @@
                     }
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- ARQUIVO INTELIGENTE ---
-                    if (dados.file && dados.file.url) {
+                    // --- ARQUIVO INTELIGENTE (BLOQUEADO SUB-ADMIN) ---
+                    if (dados.file && dados.file.url && dados.cargo !== 'Sub-Admin') {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
                         document.getElementById('file-title').innerText = (dados.cargo === 'Teste') ? "Arquivo Teste (1h)" : "Arquivo Geral";
                         currentFileUrl = dados.file.url;
-                        
-                        // Lógica Sub-Admin (V36 original mantida)
-                        if (dados.cargo === 'Sub-Admin') {
-                            document.getElementById('btn-download-file').style.display = 'none';
-                        } else {
-                            document.getElementById('btn-download-file').style.display = 'block';
-                        }
+                        document.getElementById('btn-download-file').style.display = 'block'; 
                     } else {
                         document.getElementById('file-download-card').style.display = 'none';
                     }
@@ -392,7 +407,6 @@
         function marcarMensagemLida() { const msg = document.getElementById('msg-text').innerText; localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg); fecharModal('modal-global-msg'); }
         function checkRole() { const r = document.getElementById('new-role').value; document.getElementById('days-container').style.display = (r === 'Teste') ? 'none' : 'flex'; }
         
-        // --- FUNÇÃO DE UPLOAD CORRIGIDA (V44) ---
         function fazerUploadArquivo(modo) {
             const idInput = (modo === 'teste') ? 'admin-file-test' : 'admin-file-upload';
             const input = document.getElementById(idInput);
@@ -405,34 +419,16 @@
             status.innerText = "Enviando " + modo + "...";
             
             reader.onload = async function(e) {
-                // Remove o cabeçalho "data:tipo;base64,"
                 const base64 = e.target.result.split(',')[1]; 
-                
                 try {
                     const req = await fetch(API_URL, {
                         method: 'POST',
-                        body: JSON.stringify({ 
-                            action: 'upload_file', 
-                            user: currentUserData.user, 
-                            pass: currentUserData.pass, 
-                            fileData: base64, 
-                            fileName: file.name, 
-                            fileType: file.type, 
-                            mode: modo 
-                        })
+                        body: JSON.stringify({ action: 'upload_file', user: currentUserData.user, pass: currentUserData.pass, fileData: base64, fileName: file.name, fileType: file.type, mode: modo })
                     });
                     const res = await req.json();
-                    
-                    if (res.success) { 
-                        status.innerText = "Sucesso! Link salvo."; 
-                        alert("Arquivo " + modo + " enviado com sucesso!"); 
-                        location.reload(); 
-                    } else { 
-                        status.innerText = "Erro: " + res.msg; 
-                    }
-                } catch(err) { 
-                    status.innerText = "Erro de conexão."; 
-                }
+                    if (res.success) { status.innerText = "Sucesso! Link salvo."; alert("Arquivo " + modo + " enviado com sucesso!"); location.reload(); } 
+                    else { status.innerText = "Erro: " + res.msg; }
+                } catch(err) { status.innerText = "Erro de conexão."; }
             };
             reader.readAsDataURL(file);
         }
