@@ -16,7 +16,7 @@
     <style>
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; --purple: #8b5cf6; }
         body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
-        * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; padding-bottom: 80px; /* Espaço para o banner */ }
+        * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
         input, textarea, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
@@ -67,28 +67,11 @@
         .full-width { grid-column: span 2; }
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
+        
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
 
-        /* === ESTILOS DO BANNER DE INSTALAÇÃO === */
-        #install-banner {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: #fff; border-top: 1px solid #eee;
-            padding: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-            display: none; z-index: 9000;
-            animation: slideUp 0.5s ease-out;
-            color: #333;
-        }
-        body.dark-mode #install-banner { background: #1f2937; border-color: #374151; color: white; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
-        .install-content { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 900px; margin: 0 auto; }
-        .install-info { display: flex; align-items: center; gap: 10px; }
-        .app-icon-small { width: 40px; height: 40px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
-        .install-actions { display: flex; gap: 10px; }
-        
-        /* Instruções de Instalação (Modal) */
+        /* Estilo Tutorial Install */
         .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
-        .tutorial-icon { font-size: 18px; margin-right: 5px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -198,41 +181,29 @@
         </div>
     </div>
 
-    <div id="install-banner">
-        <div class="install-content">
-            <div class="install-info">
-                <div class="app-icon-small">⚡</div>
-                <div>
-                    <div style="font-weight: bold; font-size: 14px;">Instalar App</div>
-                    <div style="font-size: 11px; opacity: 0.8;">Acesse mais rápido direto da tela inicial.</div>
-                </div>
-            </div>
-            <div class="install-actions">
-                <button class="secondary btn-auto" onclick="fecharInstallBanner()">Agora não</button>
-                <button class="btn-auto" onclick="abrirTutorialInstall()">Instalar</button>
-            </div>
-        </div>
-    </div>
-
     <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;">
         <div class="modal-content" style="max-width: 350px;">
-            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-install-tutorial')">&times;</span>
-            <h3 style="margin-top:0; color: var(--primary);">📲 Como Instalar</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:15px;">Siga os passos para adicionar à tela inicial:</p>
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharInstallModal()">&times;</span>
+            <div style="text-align:center; margin-bottom:10px;">
+                <div style="font-size:40px; margin-bottom:5px;">⚡</div>
+                <h3 style="margin-top:0; color: var(--primary);">Instalar App</h3>
+                <p style="font-size:13px; color:#666;">Adicione à sua tela inicial para acesso rápido.</p>
+            </div>
             
+            <button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; background:var(--dark);" onclick="instalarAndroid()">📲 Instalar Agora</button>
+
             <div id="tutorial-ios" class="hidden">
-                <div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span> no navegador.</div>
-                <div class="tutorial-step">2. Role para baixo e toque em <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div>
-                <div class="tutorial-step">3. Confirme clicando em <b>Adicionar</b>.</div>
+                <div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span>.</div>
+                <div class="tutorial-step">2. Selecione <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div>
+                <div class="tutorial-step">3. Clique em <b>Adicionar</b>.</div>
             </div>
 
             <div id="tutorial-android" class="hidden">
-                <div class="tutorial-step">1. Toque nos <b>três pontinhos</b> <span style="font-size:18px;">⋮</span> no topo do navegador.</div>
-                <div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar aplicativo</b>.</div>
-                <div class="tutorial-step">3. Confirme a instalação.</div>
+                <div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span> no topo.</div>
+                <div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar app</b>.</div>
             </div>
 
-            <button class="btn-auto" style="width:100% !important; margin-top:10px;" onclick="fecharModal('modal-install-tutorial')">Entendi</button>
+            <button class="secondary btn-auto" style="width:100% !important; margin-top:10px;" onclick="fecharInstallModal()">Agora não</button>
         </div>
     </div>
 
@@ -396,16 +367,24 @@
         let countdownRef = null;
         let userEditing = null;
         let currentFileUrl = "";
+        let deferredPrompt; // Para instalação Android
 
         // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
+
+        // Captura o evento de instalação (Android)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.querySelector('.theme-toggle').innerText = '☀️';
             }
-            // Checar se deve mostrar o banner de instalação
+            
+            // Verifica instalação (abre o modal direto)
             verificarInstalacaoApp();
 
             const session = localStorage.getItem(SESSION_KEY);
@@ -417,49 +396,62 @@
             }
         };
 
-        // === LÓGICA DO BANNER DE INSTALAÇÃO ===
+        // === LÓGICA DE INSTALAÇÃO ATUALIZADA ===
         function verificarInstalacaoApp() {
-            // Se já estiver rodando como app (standalone), não mostra
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-                return;
-            }
+            // Se já for app, não faz nada
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) return;
 
-            // Verifica se o usuário fechou recentemente (pra não ser chato)
+            // Verifica se fechou nas últimas 24h
             const bannerFechadoEm = localStorage.getItem('install_banner_closed');
             if (bannerFechadoEm) {
                 const agora = new Date().getTime();
                 const umDia = 24 * 60 * 60 * 1000;
-                if (agora - parseInt(bannerFechadoEm) < umDia) {
-                    return; // Ainda não passou 24h
-                }
+                if (agora - parseInt(bannerFechadoEm) < umDia) return; 
             }
 
-            // Mostra o banner
+            // Abre o modal diretamente após 2 segundos
             setTimeout(() => {
-                document.getElementById('install-banner').style.display = 'block';
+                abrirTutorialInstall();
             }, 2000);
-        }
-
-        function fecharInstallBanner() {
-            document.getElementById('install-banner').style.display = 'none';
-            // Salva que fechou para não mostrar por 24h
-            localStorage.setItem('install_banner_closed', new Date().getTime());
         }
 
         function abrirTutorialInstall() {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             
-            if (isIOS) {
+            if (deferredPrompt) {
+                // Se o navegador permite instalação direta (Android moderno)
+                document.getElementById('btn-android-install').classList.remove('hidden');
+                document.getElementById('tutorial-android').classList.add('hidden');
+                document.getElementById('tutorial-ios').classList.add('hidden');
+            } else if (isIOS) {
+                // iPhone
+                document.getElementById('btn-android-install').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.remove('hidden');
                 document.getElementById('tutorial-android').classList.add('hidden');
             } else {
-                // Assume Android ou Desktop
+                // Android Manual ou PC
+                document.getElementById('btn-android-install').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.add('hidden');
                 document.getElementById('tutorial-android').classList.remove('hidden');
             }
             
-            fecharInstallBanner(); // Fecha o banner pequeno
-            document.getElementById('modal-install-tutorial').classList.add('show'); // Abre o tutorial
+            document.getElementById('modal-install-tutorial').classList.add('show');
+        }
+
+        async function instalarAndroid() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    fecharInstallModal();
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        function fecharInstallModal() {
+            document.getElementById('modal-install-tutorial').classList.remove('show');
+            localStorage.setItem('install_banner_closed', new Date().getTime());
         }
 
         function toggleTheme() {
