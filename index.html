@@ -18,8 +18,18 @@
         body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; transition: 0.3s; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
+        
+        /* CORREÇÃO DE INPUTS NOS MODAIS (VISIBILIDADE) */
         input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
         body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #374151; color: white; border-color: #4b5563; }
+        
+        /* FORÇA COR ESCURA EM INPUTS DE MODAIS BRANCOS PARA NÃO SUMIR TEXTO */
+        .modal-content input, .modal-content select, .modal-content textarea {
+            background: #f9fafb !important;
+            color: #1f2937 !important;
+            border-color: #e5e7eb !important;
+        }
+
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
         button:hover { filter: brightness(0.9); transform: translateY(-1px); }
         button.secondary { background: #e5e7eb; color: #333; }
@@ -404,6 +414,7 @@
     <div id="modal-renovar" class="modal-overlay"> <div class="modal-content" style="max-width: 400px;"> <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:30px; z-index:1000;" onclick="fecharModal('modal-renovar')">&times;</span> <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3> <div class="pay-card"> <div style="font-size: 12px; font-weight: bold;">PIX PARA PAGAMENTO</div> <div class="pay-key" id="pix-display" style="font-size:16px; padding:15px;">...</div> </div> <button onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button> </div> </div>
     <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;"> <div class="modal-content" style="max-width: 350px;"> <div style="text-align:center; margin-bottom:20px;"> <div style="font-size:50px; margin-bottom:10px;">⚡</div> <h3 style="margin-top:0; font-size: 20px; font-weight: 700;">Instalar App</h3> <p style="font-size:14px; color: var(--text); line-height: 1.5;">Para a melhor experiência, adicione este app à sua tela inicial.</p> </div> <button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; font-size: 16px; padding: 15px;" onclick="instalarAndroid()">📲 Instalar Agora</button> <div id="tutorial-ios" class="hidden"><div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span> abaixo.</div><div class="tutorial-step">2. Role e selecione <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div></div> <div id="tutorial-android" class="hidden"><div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span> no topo do navegador.</div><div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar app</b>.</div></div> <button class="secondary btn-auto" style="width:100% !important; margin-top:15px;" onclick="fecharInstallModal()">Agora não</button> </div> </div>
     <div id="modal-global-msg" class="modal-overlay" style="z-index: 1100;"> <div class="modal-content" style="max-width: 400px; text-align: center;"> <div style="font-size: 40px; margin-bottom: 10px;">🔔</div> <h3 style="margin-top:0; color: var(--primary);">Comunicado</h3> <p id="msg-text" style="font-size: 14px; color: #333 !important; background: #f3f4f6; padding: 15px; border-radius: 10px;"></p> <button onclick="marcarMensagemLida()" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button> </div> </div>
+    <div id="modal-send-whatsapp" class="modal-overlay" style="z-index: 1200;"> <div class="modal-content" style="max-width: 400px;"> <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:30px; z-index:1000;" onclick="fecharModal('modal-send-whatsapp')">&times;</span> <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3> <p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p> <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;"><div style="font-weight:bold; margin-bottom:5px;">📋 Dados que serão enviados:</div><div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div></div> <label style="font-size:12px; font-weight:bold;">Mensagem Complementar (Opcional):</label> <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Ex: 'Aproveite sua tela!', 'Pagamento Confirmado', etc."></textarea> <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button> </div> </div>
     <div id="modal-created-success" class="modal-overlay" style="z-index: 1300;"> <div class="modal-content" style="max-width: 350px; text-align:center;"> <div style="font-size: 50px;">✅</div> <h3 style="margin-top:0; color:var(--primary);">Usuário Criado!</h3> <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p> <div style="display:flex; flex-direction:column; gap:10px;"><button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button><button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button></div> </div> </div>
 
     <script>
@@ -411,7 +422,12 @@
         const DB_KEY = 'zapflow_v36'; const SESSION_KEY = 'zapflow_session_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUserData = null; let lastOpenedLink = ""; let pgPend = 0, pgSalv = 0, pgDesc = 0; const ITENS_PAG = 5;
-        let autoTimer = null; let countdownRef = null; let userEditing = null; let currentFileUrl = ""; let deferredPrompt; let tempUser="", tempPass="", tempWa="", tempDate="", tempVal=""; let timerInterval = null;
+        let autoTimer = null; let countdownRef = null; let userEditing = null; let currentFileUrl = ""; let deferredPrompt; 
+        
+        // VARIÁVEIS GLOBAIS PARA ENVIO
+        let tempUser="", tempPass="", tempWa="", tempDate="", tempVal=""; 
+        
+        let timerInterval = null;
         let listaClientes = []; let clienteEditandoId = null; let globalWhatsappTemplate = "";
         let filtrosAtivos = {}; 
         
@@ -825,10 +841,28 @@
             const hoje = new Date();
 
             list.forEach(row => {
-                const uUser = row[0] || "";
+                let uUser = row[0] || "";
                 if (isSubAdmin && uUser.toLowerCase() === currentUserData.user.toLowerCase()) return; 
 
-                const uPass = row[1]; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; let uCargo = row[5] || ""; const uPix = row[6] || ""; const uStatus = row[7] || "Ativo"; const uCriador = row[8] || "-"; const uCadastro = "-"; const uRevenda = row[10] || "0"; 
+                // SANITIZAÇÃO DE DADOS PARA NÃO QUEBRAR O ONCLICK
+                let uPass = row[1];
+                let uDate = row[2] || "";
+                let uWa = row[3] || "";
+                let uVal = row[4] || "";
+                let uCargo = row[5] || "";
+                let uPix = row[6] || "";
+                let uStatus = row[7] || "Ativo";
+                let uCriador = row[8] || "-";
+                let uCadastro = "-";
+                let uRevenda = row[10] || "0"; 
+
+                // Limpa aspas simples e duplas para não quebrar o HTML
+                const safeUser = uUser.replace(/'/g, "").replace(/"/g, "");
+                const safePass = String(uPass).replace(/'/g, "").replace(/"/g, "");
+                const safeWa = String(uWa).replace(/'/g, "").replace(/"/g, "");
+                const safeDate = String(uDate).replace(/'/g, "").replace(/"/g, "");
+                const safeVal = String(uVal).replace(/'/g, "").replace(/"/g, "");
+                const safeCargo = String(uCargo).replace(/'/g, "").replace(/"/g, "");
 
                 if(uCargo.toLowerCase() === 'administrador') uCargo = "Admin";
                 if(uCargo.toLowerCase() === 'subadministrador') uCargo = "Sub-Admin";
@@ -846,20 +880,20 @@
 
                 let btns = '';
                 if (!isSubAdmin) {
-                    btns += `<button class="btn-action-master act-toggle" title="Aprovar/Bloquear" onclick="toggleStatus('${uUser}')">✅</button>`;
-                    btns += `<button class="btn-action-master act-renew" title="Renovar" onclick="renovarUser('${uUser}')">📅</button>`;
+                    btns += `<button class="btn-action-master act-toggle" title="Aprovar/Bloquear" onclick="toggleStatus('${safeUser}')">✅</button>`;
+                    btns += `<button class="btn-action-master act-renew" title="Renovar" onclick="renovarUser('${safeUser}')">📅</button>`;
                 } else {
-                    btns += `<button class="btn-action-master act-signal" title="Solicitar Renovação ao Admin" onclick="sinalizarRenovacao('${uUser}')">✋</button>`;
+                    btns += `<button class="btn-action-master act-signal" title="Solicitar Renovação ao Admin" onclick="sinalizarRenovacao('${safeUser}')">✋</button>`;
                 }
                 
-                // CORREÇÃO: Passando todos os dados para o botão de editar e enviar
-                const btnSendReal = `<button class="btn-action-master act-send" title="Enviar Dados" onclick="prepararEnvioWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📩</button>`;
+                // CORREÇÃO: Passando dados "safe" (sem aspas)
+                const btnSendReal = `<button class="btn-action-master act-send" title="Enviar Dados" onclick="prepararEnvioWhatsApp('${safeUser}','${safePass}','${safeWa}','${safeDate}','${safeVal}')">📩</button>`;
                 
                 btns += `<button class="btn-action-master act-chat" title="WhatsApp" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button>`;
                 btns += btnSendReal;
                 
-                // CORREÇÃO AQUI: Passando os dados para o modal de edição
-                btns += `<button class="btn-action-master act-edit" title="Editar" onclick="prepararEdicaoUser('${uUser}', '${uDate}', '${uWa}', '${uVal}', '${uCargo}')">✏️</button>`;
+                // CORREÇÃO: Passando dados "safe" para o modal de edição
+                btns += `<button class="btn-action-master act-edit" title="Editar" onclick="prepararEdicaoUser('${safeUser}', '${safeDate}', '${safeWa}', '${safeVal}', '${safeCargo}')">✏️</button>`;
 
                 html += `<tr><td><span class="status-dot ${statusDot}"></span>${statusTexto}</td><td><b>${uUser}</b></td><td class="col-detailed">******</td><td>${uDate}</td><td>${uWa}</td><td class="col-detailed">${uVal}</td><td class="col-detailed">${uCargo}</td><td class="col-detailed">${uPix}</td>`;
                 if (!isSubAdmin) { html += `<td class="col-detailed">${uCadastro}</td><td class="col-detailed">${uCriador}</td><td class="col-detailed">${uRevenda}</td>`; }
@@ -883,7 +917,6 @@
             document.getElementById('edit-user-display').innerText = uName; 
             document.getElementById('edit-pass').value = ''; 
             
-            // Preenche os campos com os dados recebidos
             document.getElementById('edit-date').value = uDate; 
             document.getElementById('edit-wa').value = uWa; 
             document.getElementById('edit-val').value = uVal; 
@@ -892,6 +925,34 @@
             const isSub = currentUserData.cargo === 'Sub-Admin'; 
             document.getElementById('div-edit-role').style.display = isSub ? 'none' : 'block'; 
             document.getElementById('modal-edit').classList.add('show'); 
+        }
+        
+        // CORREÇÃO: Função de Envio com preparação
+        function prepararEnvioWhatsApp(u, p, w, d, v) { 
+            tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v; 
+            document.getElementById('send-dest').innerText = u; 
+            const previewHtml = `👤 <b>Usuário:</b> ${u}<br>🔑 <b>Senha:</b> ${p}<br>📅 <b>Vencimento:</b> ${d}<br>🌐 <b>Site:</b> www.gerenciadorwa.com.br`; 
+            document.getElementById('preview-msg-content').innerHTML = previewHtml; 
+            document.getElementById('whatsapp-extra-msg').value = ""; 
+            document.getElementById('modal-send-whatsapp').classList.add('show'); 
+        }
+
+        // CORREÇÃO: Função de Envio com tratamento de número
+        function finalizarEnvioWhatsApp() { 
+            const extra = document.getElementById('whatsapp-extra-msg').value; 
+            const quebra = extra ? `\n\n${extra}` : ""; 
+            const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${tempUser}\n🔑 *Senha:* ${tempPass}\n📅 *Vencimento:* ${tempDate}\n🌐 *Site:* www.gerenciadorwa.com.br${quebra}`; 
+            
+            // LIMPEZA E CORREÇÃO DO NÚMERO
+            let num = String(tempWa).replace(/\D/g,'');
+            if(!num || num.length < 8) return alert("Este usuário não tem número de WhatsApp válido.");
+
+            if (num.length >= 10 && num.length <= 11) {
+                num = '55' + num; // Adiciona Brasil se faltar
+            }
+            
+            window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`); 
+            fecharModal('modal-send-whatsapp'); 
         }
         
         async function salvarEdicao() { const btn = document.getElementById('btn-save-edit'); const p = document.getElementById('edit-pass').value; const d = document.getElementById('edit-date').value; const w = document.getElementById('edit-wa').value; const v = document.getElementById('edit-val').value; const r = document.getElementById('edit-role').value; btn.disabled = true; btn.innerText = "Salvando..."; const edit = { userOriginal: userEditing, pass: p, date: d, wa: w, val: v, cargo: r }; try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: edit }) }); alert("Editado!"); fecharModal('modal-edit'); abrirAdminPanel(); } catch (e) { alert("Erro."); } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
